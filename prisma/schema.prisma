@@ -1,0 +1,620 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Roles: ADMIN | OPERATIONS_MANAGER | DISPATCHER | DRIVER | VIEWER
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("OPERATIONS_MANAGER")
+  title        String?
+  phone        String?
+  avatarSeed   String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  documents  Document[]
+  incidents  Incident[]
+  sessions   Session[]
+  tasks      Task[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// Vehicle status: AVAILABLE | ON_TRIP | MAINTENANCE | OFFLINE
+model Vehicle {
+  id          String   @id @default(cuid())
+  plateNumber String   @unique
+  vehicleType String
+  capacityTon Float?
+  status      String   @default("AVAILABLE")
+  notes       String?
+  // Maintenance tracking (km read manually or synced from the GPS platform)
+  odometerKm      Float?
+  odometerUpdatedAt DateTime?
+  makeModel       String?  @default("FAW JH6 2025")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  drivers      Driver[]
+  trips        Trip[]
+  gpsDevice    GPSDevice?
+  locations    VehicleLocation[]
+  maintenance  MaintenanceRecord[]
+}
+
+// Completed service entry — the km at which a PM service was performed.
+// Next-due calculations compare the truck's odometer to the last record
+// of each PM level against the FAW interval plan.
+model MaintenanceRecord {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  serviceCode String // PM-A .. PM-G | MAJOR (FAW JH6 plan)
+  odometerKm  Float
+  performedAt DateTime @default(now())
+  workshop    String?
+  costSar     Float?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([vehicleId, serviceCode])
+}
+
+// Immutable audit trail — every money/status change is recorded, never deleted.
+// Corrections (step-back) keep the old values in `before` instead of erasing history.
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userName  String
+  action    String // e.g. TRIP_STATUS_ADVANCED | TRIP_STATUS_REVERSED | INVOICE_ISSUED
+  entity    String // Trip | Shipment | Settlement | Invoice | Customer ...
+  entityId  String
+  entityRef String? // human-readable code, e.g. TRP-2026-000123
+  before    String? // JSON snapshot of changed fields (old values)
+  after     String? // JSON snapshot of changed fields (new values)
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// GPS device linked to a vehicle for live tracking via Tracking Maps
+model GPSDevice {
+  id              String   @id @default(cuid())
+  vehicleId       String   @unique
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  trackmapsDeviceId String  @unique // Device ID in the GPS tracking system
+  lastLocationAt  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Live vehicle location from GPS tracking
+model VehicleLocation {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  speed     Float?
+  heading   Float?
+  accuracy  Float?
+  timestamp DateTime @default(now())
+
+  @@index([vehicleId, timestamp])
+}
+
+// Driver status: AVAILABLE | ON_TRIP | OFF_DUTY
+model Driver {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String
+  email         String?
+  licenseNumber String
+  rating        Float    @default(4.5)
+  status        String   @default("AVAILABLE")
+  avatarSeed    String?
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trips Trip[]
+}
+
+model Customer {
+  id            String   @id @default(cuid())
+  name          String
+  nameAr        String?
+  company       String?
+  contactPerson String?
+  phone         String
+  email         String?
+  address       String?
+  crNumber      String?
+  vatNumber     String?
+  // Legal attachments (CR certificate / VAT certificate) stored inline
+  crDocName     String?
+  crDocDataUrl  String?
+  vatDocName    String?
+  vatDocDataUrl String?
+  // Agreed contract terms: CASH (due on receiving originals + invoice) or CREDIT
+  paymentTerms  String   @default("CASH")
+  creditDays    Int?
+  isVendor      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shipments   Shipment[]
+  quotations  Quotation[]
+  rates       CustomerRate[]
+  products    Product[]
+  documents   Document[]
+  vendorRates CarrierRate[] @relation("VendorRates")
+}
+
+// Agreed rate card per customer: one row per lane (origin → destination) and
+// trip type. Bookings for the customer are limited to these lanes.
+model CustomerRate {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  originName      String
+  destinationName String
+  tripType        String   @default("ONE_WAY") // ONE_WAY | ROUND_TRIP
+  rateAmount      Float
+  currency        String   @default("SAR")
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([customerId])
+}
+
+// Carrier Tariff Book — what a SUBCONTRACTED transporter (vendor) charges us
+// per lane AND per vehicle/equipment type, alongside what we sell that lane
+// for. Rates are vendor-specific: the same lane can cost differently at
+// different vendors, and differently again by vehicle type at the same vendor.
+model CarrierRate {
+  id              String   @id @default(cuid())
+  vendorId        String
+  vendor          Customer @relation("VendorRates", fields: [vendorId], references: [id], onDelete: Cascade)
+  originCity      String
+  destinationCity String
+  vehicleType     String // one of the fixed VEHICLE_TYPES options
+  carrierCost     Float // what the transporter charges us (excl. VAT)
+  sellingPrice    Float? // what we charge the customer (excl. VAT)
+  currency        String   @default("SAR")
+  distanceKm      Float?
+  // true once a real negotiated quote replaces the estimate
+  isActual        Boolean  @default(false)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([vendorId, originCity, destinationCity, vehicleType])
+}
+
+// Single-row table holding the company's legal identity; printed on all documents
+model CompanyProfile {
+  id              String   @id @default(cuid())
+  name            String
+  nameAr          String?
+  tagline         String?
+  crNumber        String?
+  vatNumber       String?
+  phone           String?
+  phone2          String?
+  email           String?
+  website         String?
+  address         String?
+  city            String?
+  country         String?  @default("Saudi Arabia")
+  bankName        String?
+  bankAccount     String?
+  bankIban        String?
+  bankBeneficiary String?
+  logoDataUrl     String?
+  updatedAt       DateTime @updatedAt
+}
+
+// Trip type: ONE_WAY | ROUND_TRIP (return empty)
+// Status: DRAFT | SENT | ACCEPTED | REJECTED | EXPIRED
+model Quotation {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  customerId       String?
+  customer         Customer? @relation(fields: [customerId], references: [id])
+  // Fallback details when there is no saved Customer record yet — lets a
+  // quotation be typed and printed directly without creating a customer.
+  manualCustomerName    String?
+  manualCustomerCompany String?
+  manualCustomerPhone   String?
+  manualCustomerAddress String?
+  originName       String
+  destinationName  String
+  tripType         String    @default("ONE_WAY")
+  vehicleType      String?
+  cargoDescription String?
+  weightKg         Float?
+  priceAmount      Float
+  currency         String    @default("SAR")
+  vatPct           Float     @default(15)
+  validUntil       DateTime?
+  notes            String?
+  status           String    @default("DRAFT")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// Priority: STANDARD | EXPRESS | OVERNIGHT
+// Status: PENDING | DISPATCHED | COLLECTING | IN_TRANSIT | AT_DELIVERY | DELIVERED | DELAYED | CANCELLED
+model Shipment {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  originName      String
+  destinationName String
+
+  // ONE_WAY or ROUND_TRIP (round trips return the empty container to a 3rd location)
+  tripType   String  @default("ONE_WAY")
+  returnName String?
+  // Snapshot of the customer's agreed lane rate at booking time (excl. VAT)
+  agreedRate Float?
+
+  // Optional precise locations: pasted address text + map pin (percent coords)
+  originAddress      String?
+  destinationAddress String?
+  returnAddress      String?
+  originX            Float?
+  originY            Float?
+  destX              Float?
+  destY              Float?
+  returnX            Float?
+  returnY            Float?
+  // Equipment requested: one or more vehicle types, comma-separated codes
+  // (e.g. "FLATBED,REEFER"). Reefer bookings also carry a temperature range.
+  vehicleTypes String?
+  tempMinC     Float?
+  tempMaxC     Float?
+
+  priority        String   @default("STANDARD")
+  status          String   @default("PENDING")
+  cycleStage      Int      @default(1)
+  weightKg        Float?
+  notes           String?
+  cancelReason    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  trip       Trip?
+  documents  Document[]
+  pod        ProofOfDelivery?
+  settlement Settlement?
+  stops      DeliveryStop[]
+}
+
+// Additional drop-off points inside the destination city. The main
+// destination is stop 0; these are the extra points the driver must visit.
+model DeliveryStop {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  seq        Int      @default(1) // visiting order
+  name       String // e.g. "Branch 2 — Al Olaya"
+  address    String?
+  contactName  String?
+  contactPhone String?
+  notes      String?
+  // Optional map pin (same percent coordinate space as the shipment pins)
+  pinX       Float?
+  pinY       Float?
+  // Set when the driver completes this drop
+  deliveredAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([shipmentId, seq])
+}
+
+// Post-delivery financial follow-up cycle (accounts department):
+// DOCS_WITH_DRIVER → DOCS_IN_YARD → WITH_ACCOUNTS → INVOICED → PAID
+model Settlement {
+  id                 String    @id @default(cuid())
+  shipmentId         String    @unique
+  shipment           Shipment  @relation(fields: [shipmentId], references: [id])
+  status             String    @default("DOCS_WITH_DRIVER")
+  docsReceivedAt     DateTime?
+  handedToAccountsAt DateTime?
+  invoicedAt         DateTime?
+  paymentDueAt       DateTime?
+  paidAt             DateTime?
+  // snapshot of the customer's agreed terms at delivery time
+  paymentTerms       String    @default("CASH")
+  creditDays         Int?
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  invoice Invoice?
+}
+
+model Invoice {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  settlementId String     @unique
+  settlement   Settlement @relation(fields: [settlementId], references: [id])
+  amount       Float // base freight charge (excl. VAT)
+  vatPct       Float      @default(15)
+  currency     String     @default("SAR")
+  issuedAt     DateTime   @default(now())
+  dueAt        DateTime?
+  notes        String?
+
+  charges InvoiceCharge[]
+}
+
+// Additional invoice line items entered at invoicing time (waiting charges,
+// detention, extra handling...). VAT applies to freight + all charges.
+model InvoiceCharge {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+
+  @@index([invoiceId])
+}
+
+// Status: PENDING | DISPATCHED | COLLECTING | IN_TRANSIT | AT_DELIVERY | DELIVERED | DELAYED | CANCELLED
+model Trip {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  shipmentId String   @unique
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+  driverId   String?
+  driver     Driver?  @relation(fields: [driverId], references: [id])
+  vehicleId  String?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id])
+
+  // Unregistered driver/truck entered manually at dispatch time
+  manualDriverName  String?
+  manualDriverPhone String?
+  manualVehicle     String?
+
+  // Driver allowance (trip money) agreed for this trip and whether it was paid out
+  driverAllowance  Float?
+  allowancePaid    Boolean   @default(false)
+  allowancePaidAt  DateTime?
+  // Accounts transfer proof: payment slip uploaded when the money is sent
+  allowanceSlipUrl String?
+  allowanceSentBy  String?
+
+  // Trip running costs (entered at/after trip close) — feed profitability reports
+  fuelCost  Float?
+  tollsCost Float?
+  otherCost Float?
+
+  originName      String
+  originX         Float
+  originY         Float
+  destinationName String
+  destX           Float
+  destY           Float
+  // Round-trip empty return leg (null for one-way trips)
+  returnName      String?
+  returnX         Float?
+  returnY         Float?
+  currentX        Float?
+  currentY        Float?
+
+  status      String @default("PENDING")
+  progressPct Int    @default(0)
+  distanceKm  Float?
+  statusNote  String?
+  // Status the trip was in before being marked DELAYED (used by Resume)
+  delayedFrom String?
+
+  departureAt       DateTime?
+  etaAt             DateTime?
+  dispatchedAt      DateTime?
+  collectingAt      DateTime?
+  inTransitAt       DateTime?
+  atDeliveryAt      DateTime?
+  deliveredAt       DateTime?
+  leftDeliveryAt    DateTime?
+  returnTransitAt   DateTime?
+  atReturnAt        DateTime?
+  returnOffloadedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incidents Incident[]
+  documents Document[]
+  tasks     Task[]
+}
+
+// Status: PENDING | IN_PROGRESS | DONE
+// Priority: LOW | MEDIUM | HIGH
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  status        String    @default("PENDING")
+  priority      String    @default("MEDIUM")
+  dueAt         DateTime?
+  assignedToId  String?
+  assignedTo    User?     @relation(fields: [assignedToId], references: [id])
+  relatedTripId String?
+  relatedTrip   Trip?     @relation(fields: [relatedTripId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Severity: LOW | MEDIUM | HIGH | CRITICAL
+// Status: OPEN | IN_PROGRESS | RESOLVED
+model Incident {
+  id           String    @id @default(cuid())
+  tripId       String?
+  trip         Trip?     @relation(fields: [tripId], references: [id])
+  title        String
+  description  String
+  severity     String    @default("MEDIUM")
+  status       String    @default("OPEN")
+  reportedById String?
+  reportedBy   User?     @relation(fields: [reportedById], references: [id])
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  name         String
+  fileType     String
+  dataUrl      String
+  sizeKb       Float?
+  shipmentId   String?
+  shipment     Shipment? @relation(fields: [shipmentId], references: [id])
+  tripId       String?
+  trip         Trip?     @relation(fields: [tripId], references: [id])
+  // General document attached to a customer/vendor profile (contracts, quotations, registration docs)
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  uploadedById String?
+  uploadedBy   User?     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime  @default(now())
+}
+
+model ProofOfDelivery {
+  id               String   @id @default(cuid())
+  shipmentId       String   @unique
+  shipment         Shipment @relation(fields: [shipmentId], references: [id])
+  receivedBy       String
+  signatureDataUrl String?
+  photoDataUrl     String?
+  notes            String?
+  createdAt        DateTime @default(now())
+}
+
+// Severity: INFO | WARNING | CRITICAL
+model Alert {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  severity  String   @default("INFO")
+  tripId    String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ─── Warehouse Management (WMS) ──────────────────────────────────
+// Stock is tracked per (zone, product) pair in Inventory, which holds the
+// current balance. Every change is also appended to InventoryMovement so the
+// balance can always be re-derived from history (same append-only spirit as
+// AuditLog — movements are never edited or deleted, corrections are new rows).
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  code      String   @unique // WH-JED-01
+  name      String
+  nameAr    String?
+  city      String?
+  address   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  zones WarehouseZone[]
+}
+
+// Zone type: AMBIENT | COLD | BONDED
+// Bonded zones hold goods that have not yet cleared customs.
+model WarehouseZone {
+  id              String    @id @default(cuid())
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  code            String // A | B | C
+  zoneType        String    @default("AMBIENT")
+  capacityPallets Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  inventory Inventory[]
+  movements InventoryMovement[]
+
+  @@unique([warehouseId, code])
+}
+
+// Unit of measure: PALLET | CARTON | KG | UNIT
+// customerId is set when the stock is held on behalf of a customer (3PL storage);
+// null means it belongs to the company itself.
+model Product {
+  id           String    @id @default(cuid())
+  sku          String    @unique
+  name         String
+  nameAr       String?
+  uom          String    @default("PALLET")
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  reorderLevel Float     @default(0)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  inventory Inventory[]
+  movements InventoryMovement[]
+
+  @@index([customerId])
+}
+
+// Current stock balance for one product in one zone.
+model Inventory {
+  id        String        @id @default(cuid())
+  zoneId    String
+  zone      WarehouseZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product       @relation(fields: [productId], references: [id])
+  quantity  Float         @default(0)
+  updatedAt DateTime      @updatedAt
+
+  @@unique([zoneId, productId])
+  @@index([productId])
+}
+
+// Direction: IN | OUT | ADJUST
+// refType: SHIPMENT | PO | ADJUSTMENT | RETURN — refId points at that record.
+// Actor is denormalised (id + name) rather than related, matching AuditLog.
+model InventoryMovement {
+  id              String        @id @default(cuid())
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  zoneId          String
+  zone            WarehouseZone @relation(fields: [zoneId], references: [id])
+  direction       String
+  quantity        Float
+  refType         String?
+  refId           String?
+  note            String?
+  performedById   String?
+  performedByName String?
+  occurredAt      DateTime      @default(now())
+
+  @@index([productId, occurredAt])
+  @@index([zoneId, occurredAt])
+}

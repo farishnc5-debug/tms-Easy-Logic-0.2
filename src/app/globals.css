@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* The app is designed light-only; never switch palette with OS dark mode */
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Brand ramp — orange core deepening to red. Use `brand-*` utilities
+   (bg-brand-600, text-brand-700, ring-brand-500) for all chrome: sidebar,
+   buttons, links, focus rings, active states.
+   Defined in a plain `@theme` block (not `@theme inline`) so Tailwind
+   registers them as real theme colors and generates the utilities.
+   Do NOT use these for status badges — those live in src/lib/constants.ts
+   and rely on distinct hues to stay tellable apart. */
+@theme {
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+  --color-brand-950: #431407;
+
+  /* Deep red end of the theme — headers, gradients, emphasis. */
+  --color-brandred-500: #ef4444;
+  --color-brandred-600: #dc2626;
+  --color-brandred-700: #b91c1c;
+  --color-brandred-800: #991b1b;
+  --color-brandred-900: #7f1d1d;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Form controls must stay readable regardless of OS dark-mode preference */
+input,
+select,
+textarea {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Print documents: hide chrome, size to A4 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+  .print-page {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
