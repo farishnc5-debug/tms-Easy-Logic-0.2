@@ -14,7 +14,7 @@ Everything below has a free tier to start. Total time: about 30 minutes.
 Create an **empty private repository** (no README), then in the project folder:
 ```bash
 git remote add origin https://github.com/<you>/<repo>.git
-git push -u origin main
+git push -u origin master
 ```
 
 ## 2. Create the services (in the Vercel dashboard)
@@ -80,5 +80,5 @@ Vercel → Project → **Domains** → add e.g. `tms.yourcompany.com` and follow
   `https://<your-domain>/api/webhooks/whatsapp`.
 - **Backups:** Neon keeps short point-in-time history on the free plan. Export regularly with
   `node scripts/db-export.js` (with `DATABASE_URL` pointing at Neon) until you upgrade.
-- **Updates:** every push to `main` redeploys automatically. Schema changes are applied by the
+- **Updates:** every push to `master` redeploys automatically. Schema changes are applied by the
   build; destructive changes will stop the build rather than delete data.
