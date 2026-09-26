@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+prisma/*.db
+prisma/*.db-journal
+prisma/dev.db*
+storage
+backups
+data-export.json
+.pgpassword
+node_modules
+.next
+.vercel
