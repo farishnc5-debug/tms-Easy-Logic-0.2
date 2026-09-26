@@ -31,7 +31,6 @@ export default function LoginForm() {
           name="email"
           type="email"
           required
-          defaultValue="faris.hnc5@gmail.com"
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
           placeholder="you@company.com"
         />
@@ -45,7 +44,6 @@ export default function LoginForm() {
           name="password"
           type="password"
           required
-          defaultValue="password123"
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
           placeholder="••••••••"
         />

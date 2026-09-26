@@ -2,8 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// NOTE: temporarily "sqlite" for local development (Docker/Neon not set up
+// yet in this environment). Switch back to "postgresql" as the last step
+// before deploying — see the deployment plan in Settings → Install & Put Online.
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -25,6 +28,17 @@ model User {
   incidents  Incident[]
   sessions   Session[]
   tasks      Task[]
+  apiKeys        ApiKey[]
+  shipmentAlarms ShipmentAlarm[]
+}
+
+// Failed sign-in attempts, used to lock an account/IP out after repeated failures
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String // "email:<address>" or "ip:<address>"
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 model Session {
@@ -147,6 +161,12 @@ model Customer {
   phone         String
   email         String?
   address       String?
+  // Structured National Address — required on ZATCA e-invoices (standard/B2B)
+  streetName     String?
+  buildingNumber String? // 4 digits
+  district       String?
+  city           String?
+  postalCode     String? // 5 digits
   crNumber      String?
   vatNumber     String?
   // Legal attachments (CR certificate / VAT certificate) stored inline
@@ -223,6 +243,11 @@ model CompanyProfile {
   email           String?
   website         String?
   address         String?
+  // Structured National Address — required on ZATCA e-invoices
+  streetName      String?
+  buildingNumber  String? // 4 digits
+  district        String?
+  postalCode      String? // 5 digits
   city            String?
   country         String?  @default("Saudi Arabia")
   bankName        String?
@@ -303,11 +328,21 @@ model Shipment {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Wasiqa — the transport document issued via Saudi Arabia's Transport
+  // General Authority (TGA). Recorded manually (issued on TGA's own portal)
+  // until a real TGA API integration exists — see wasiqaNotes.
+  wasiqaNumber   String?
+  wasiqaStatus   String? // e.g. NOT_ISSUED | ISSUED | EXPIRED — free text, no fixed API-driven states yet
+  wasiqaIssuedAt DateTime?
+  wasiqaNotes    String?
+
   trip       Trip?
   documents  Document[]
   pod        ProofOfDelivery?
   settlement Settlement?
   stops      DeliveryStop[]
+  alarms     ShipmentAlarm[]
+  whatsappMessages WhatsAppMessage[]
 }
 
 // Additional drop-off points inside the destination city. The main
@@ -366,7 +401,38 @@ model Invoice {
   dueAt        DateTime?
   notes        String?
 
-  charges InvoiceCharge[]
+  charges        InvoiceCharge[]
+  zatcaDocuments ZatcaDocument[]
+}
+
+// Every e-invoice document sent (or attempted) to ZATCA: the invoice itself,
+// plus any credit / debit notes. `icv` (counter) and `previousHash` form the
+// tamper-evident chain ZATCA requires; only accepted documents (CLEARED /
+// REPORTED) keep an icv, so failed attempts don't leave gaps in the chain.
+// Status: PENDING | CLEARED | REPORTED | REJECTED | ERROR
+model ZatcaDocument {
+  id           String    @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  docType      String // INVOICE | CREDIT | DEBIT
+  invoiceType  String // STANDARD (B2B, cleared) | SIMPLIFIED (B2C, reported)
+  number       String
+  uuid         String    @unique
+  environment  String // SANDBOX | SIMULATION | PRODUCTION
+  icv          Int?
+  hash         String?
+  previousHash String?
+  xml          String? // signed XML (or the ZATCA-stamped XML for cleared invoices)
+  qr           String? // base64 QR payload printed on the invoice
+  status       String    @default("PENDING")
+  response     String? // JSON: ZATCA's validation messages
+  reason       String? // credit/debit note reason
+  amountGross  Float?
+  createdAt    DateTime  @default(now())
+  submittedAt  DateTime?
+
+  @@unique([environment, icv])
+  @@index([invoiceId])
 }
 
 // Additional invoice line items entered at invoicing time (waiting charges,
@@ -617,4 +683,74 @@ model InventoryMovement {
 
   @@index([productId, occurredAt])
   @@index([zoneId, occurredAt])
+}
+
+// ─── Connections / Ecosystem ─────────────────────────────────────
+// One row per channel type (Gmail, WhatsApp, Telegram). `config` holds a
+// JSON blob of that channel's credentials — see src/lib/actions/integrations.ts
+// for the shape per type. There is only ever one row per `type` (singleton
+// per channel, matching the CompanyProfile pattern).
+model Integration {
+  id         String    @id @default(cuid())
+  type       String    @unique // GMAIL | WHATSAPP | TELEGRAM
+  status     String    @default("DISCONNECTED") // DISCONNECTED | CONNECTED | ERROR
+  config     String? // JSON, shape depends on type
+  lastTestAt DateTime?
+  lastTestOk Boolean?
+  lastError  String?
+  updatedAt  DateTime  @updatedAt
+}
+
+// External API access — the foundation the future "Agent TMS" (agentic AI)
+// will authenticate with. Only the SHA-256 hash of the key is stored; the
+// plaintext key is shown to the user exactly once, at creation time.
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyPrefix   String // shown in the UI so the user can tell keys apart, e.g. "elk_live_ab12"
+  keyHash     String    @unique
+  scopes      String    @default("shipments:read") // comma-separated scope codes
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// Two-way WhatsApp message log (via the WhatsApp Cloud API integration
+// configured on the Connections page). Direction OUT = sent from this app,
+// IN = received via the /api/webhooks/whatsapp webhook.
+model WhatsAppMessage {
+  id         String    @id @default(cuid())
+  direction  String // OUT | IN
+  toPhone    String?
+  fromPhone  String?
+  body       String
+  status     String    @default("SENT") // SENT | FAILED | RECEIVED
+  error      String?
+  shipmentId String?
+  shipment   Shipment? @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+
+  @@index([shipmentId])
+  @@index([createdAt])
+}
+
+// A scheduled full-screen alarm tied to a shipment (e.g. "call the customer
+// before loading", "check on this delayed trip at 3pm").
+model ShipmentAlarm {
+  id           String    @id @default(cuid())
+  shipmentId   String
+  shipment     Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  triggerAt    DateTime
+  label        String?
+  status       String    @default("PENDING") // PENDING | SNOOZED | DISMISSED
+  snoozedUntil DateTime?
+  createdById  String?
+  createdBy    User?     @relation(fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([shipmentId])
+  @@index([status, triggerAt])
 }

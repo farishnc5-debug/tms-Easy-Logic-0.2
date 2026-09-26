@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getCompanyProfile } from "@/lib/company";
 import { updateUser } from "@/lib/actions/users";
 import { Avatar } from "@/components/ui/avatar";
 import { ROLE_LABELS } from "@/lib/constants";
@@ -25,10 +26,11 @@ export default async function SettingsPage({
   const tab = typeof sp.tab === "string" && TABS.some((t) => t.key === sp.tab) ? sp.tab : "profile";
 
   const action = updateUser.bind(null, user.id);
+  const company = await getCompanyProfile();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white px-2 pt-2">
+      <div className="flex gap-1 overflow-x-auto card px-2 pt-2">
         {TABS.map((t) => (
           <Link
             key={t.key}
@@ -50,7 +52,7 @@ export default async function SettingsPage({
 
       {tab === "profile" && (
         <div className="space-y-6">
-      <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex items-center gap-4 card p-6">
         <Avatar name={user.name} size={56} />
         <div>
           <h2 className="text-lg font-semibold text-slate-900">{user.name}</h2>
@@ -59,7 +61,7 @@ export default async function SettingsPage({
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-4 text-xs font-semibold tracking-widest text-slate-400">MY PROFILE</p>
         <form action={action} className="space-y-4">
           <input type="hidden" name="role" value={user.role} />
@@ -96,7 +98,7 @@ export default async function SettingsPage({
             <input
               type="password"
               name="password"
-              minLength={6}
+              minLength={8}
               placeholder="Leave blank to keep current password"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400"
             />
@@ -109,26 +111,35 @@ export default async function SettingsPage({
         </form>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-4 text-xs font-semibold tracking-widest text-slate-400">COMPANY PROFILE</p>
         <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-slate-400">Company Name</dt>
-            <dd className="font-medium text-slate-700">Easy Logic Logistics Co.</dd>
+            <dd className="font-medium text-slate-700">{company.name}</dd>
           </div>
           <div>
-            <dt className="text-slate-400">Headquarters</dt>
-            <dd className="font-medium text-slate-700">Riyadh, Saudi Arabia</dd>
+            <dt className="text-slate-400">Location</dt>
+            <dd className="font-medium text-slate-700">
+              {[company.city, company.country].filter(Boolean).join(", ") || "-"}
+            </dd>
           </div>
           <div>
-            <dt className="text-slate-400">Fleet Base</dt>
-            <dd className="font-medium text-slate-700">Jeddah Warehouse, Riyadh DC, Dammam Port</dd>
+            <dt className="text-slate-400">CR / VAT No.</dt>
+            <dd className="font-medium text-slate-700">
+              {[company.crNumber, company.vatNumber].filter(Boolean).join(" / ") || "-"}
+            </dd>
           </div>
           <div>
-            <dt className="text-slate-400">Support Contact</dt>
-            <dd className="font-medium text-slate-700">ops@easylogic.sa</dd>
+            <dt className="text-slate-400">Contact</dt>
+            <dd className="font-medium text-slate-700">
+              {[company.phone, company.email].filter(Boolean).join(" · ") || "-"}
+            </dd>
           </div>
         </dl>
+        <Link href="/company" className="mt-4 inline-block text-xs font-medium text-brand-600 hover:underline">
+          Edit company profile →
+        </Link>
       </div>
         </div>
       )}

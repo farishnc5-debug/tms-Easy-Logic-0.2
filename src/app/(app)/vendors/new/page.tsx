@@ -10,7 +10,7 @@ export default function NewVendorPage() {
       <Link href="/vendors" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Vendors
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">Add Vendor</h2>
         <p className="mb-5 text-sm text-slate-500">Register a new vendor.</p>
         <form action={action} className="space-y-5">

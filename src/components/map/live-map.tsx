@@ -99,7 +99,9 @@ export default function LiveMap({
 
   // Keep latest callback without re-initializing the map
   const onSelectRef = useRef(onSelectTrip);
-  onSelectRef.current = onSelectTrip;
+  useEffect(() => {
+    onSelectRef.current = onSelectTrip;
+  });
 
   useEffect(() => {
     let cancelled = false;

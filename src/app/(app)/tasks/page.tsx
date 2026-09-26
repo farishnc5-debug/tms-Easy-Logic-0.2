@@ -33,7 +33,7 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest text-slate-400">
           <ClipboardList size={14} /> NEW TASK
         </p>

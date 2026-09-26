@@ -12,6 +12,8 @@ import ConfirmSubmitButton from "@/components/ui/confirm-submit-button";
 import { deleteShipment, cancelBooking } from "@/lib/actions/shipments";
 import { fmtDateTime, fmtDate } from "@/lib/format";
 import { stageOfStatus, VEHICLE_TYPE_LABELS } from "@/lib/constants";
+import AlarmCard from "@/components/shipments/alarm-card";
+import WasiqaCard from "@/components/shipments/wasiqa-card";
 
 export default async function ShipmentDetailPage({
   params,
@@ -31,6 +33,7 @@ export default async function ShipmentDetailPage({
       documents: true,
       pod: true,
       stops: { orderBy: { seq: "asc" } },
+      alarms: { where: { status: { not: "DISMISSED" } }, orderBy: { triggerAt: "asc" } },
     },
   });
   if (!shipment) notFound();
@@ -149,7 +152,7 @@ export default async function ShipmentDetailPage({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {trip ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-xs font-semibold tracking-widest text-slate-400">
                   TRIP {trip.code}
@@ -250,7 +253,7 @@ export default async function ShipmentDetailPage({
               )}
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
                 DISPATCH THIS SHIPMENT
               </p>
@@ -279,7 +282,7 @@ export default async function ShipmentDetailPage({
             </div>
           )}
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-semibold tracking-widest text-slate-400">DOCUMENTS</p>
               <Link
@@ -303,7 +306,7 @@ export default async function ShipmentDetailPage({
           </div>
 
           {trip && trip.incidents.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">INCIDENTS</p>
               <ul className="space-y-2">
                 {trip.incidents.map((inc) => (
@@ -321,7 +324,7 @@ export default async function ShipmentDetailPage({
           )}
 
           {shipment.pod && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest text-slate-400">
                 <BadgeCheck size={14} className="text-emerald-500" /> PROOF OF DELIVERY
               </p>
@@ -333,7 +336,17 @@ export default async function ShipmentDetailPage({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <AlarmCard shipmentId={shipment.id} alarms={shipment.alarms} />
+
+          <WasiqaCard
+            shipmentId={shipment.id}
+            wasiqaNumber={shipment.wasiqaNumber}
+            wasiqaStatus={shipment.wasiqaStatus}
+            wasiqaIssuedAt={shipment.wasiqaIssuedAt}
+            wasiqaNotes={shipment.wasiqaNotes}
+          />
+
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">CUSTOMER</p>
             <div className="flex items-center gap-3">
               <Avatar name={shipment.customer.name} size={40} />
@@ -355,7 +368,7 @@ export default async function ShipmentDetailPage({
             </Link>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">SHIPMENT INFO</p>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">

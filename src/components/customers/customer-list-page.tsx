@@ -32,7 +32,7 @@ export default async function CustomerListPage({ isVendor }: { isVendor: boolean
           icon={isVendor ? Building2 : Users}
           label={tr(isVendor ? "Total Vendors" : "Total Customers")}
           value={customers.length}
-          color="#2563eb"
+          color="#ea580c"
         />
         <StatCard
           icon={Package}
@@ -47,7 +47,7 @@ export default async function CustomerListPage({ isVendor }: { isVendor: boolean
           <Link
             key={c.id}
             href={`${base}/${c.id}`}
-            className="rounded-xl border border-slate-200 bg-white p-4 hover:shadow-sm"
+            className="card p-4 hover:shadow-sm"
           >
             <div className="flex items-center gap-3">
               <Avatar name={c.name} size={44} />
@@ -70,7 +70,7 @@ export default async function CustomerListPage({ isVendor }: { isVendor: boolean
       </div>
 
       {customers.length === 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">
+        <div className="card p-12 text-center text-sm text-slate-400">
           No {isVendor ? "vendors" : "customers"} yet.
         </div>
       )}

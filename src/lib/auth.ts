@@ -53,6 +53,9 @@ export async function getCurrentUser() {
     return null;
   }
 
+  // A deactivated user must lose access immediately, not at session expiry
+  if (!session.user.active) return null;
+
   return session.user;
 }
 

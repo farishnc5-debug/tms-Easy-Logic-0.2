@@ -61,6 +61,24 @@ export const AR: Record<string, string> = {
   // Nav additions
   "Operations Guide": "دليل العمليات",
   "Carrier Tariff Book": "دفتر أسعار الناقلين",
+  CONNECTIONS: "الاتصالات",
+  "Connections (API / MCP)": "الاتصالات (API / MCP)",
+
+  // Dashboard KPIs / empty states
+  "Active trips": "الرحلات النشطة",
+  "Awaiting dispatch": "بانتظار التسيير",
+  "Vehicles available": "المركبات المتاحة",
+  Delayed: "متأخرة",
+  "No trips currently in transit": "لا توجد رحلات في الطريق حالياً",
+  "New booking": "حجز جديد",
+
+  // Shipment alarm (full-screen alert)
+  "SHIPMENT ALARM": "تنبيه شحنة",
+  Snooze: "تأجيل",
+  Minimize: "تصغير",
+  Close: "إغلاق",
+  "Open shipment": "فتح الشحنة",
+  "1 alarm minimized": "تنبيه واحد مُصغّر",
 
   // Common
   Search: "بحث",
@@ -222,9 +240,8 @@ export const AR: Record<string, string> = {
   Ongoing: "جارية",
   Completed: "مكتملة",
   Cancelled: "ملغاة",
-  Delayed: "متأخرة",
-  "Total Shipments": "إجمالي الشحنات",
   "Total Trips": "إجمالي الرحلات",
+  "Total Shipments": "إجمالي الشحنات",
   "Shipment ID": "رقم الشحنة",
   Pending: "قيد الانتظار",
   "View full trip details": "عرض تفاصيل الرحلة كاملة",

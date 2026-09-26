@@ -215,7 +215,7 @@ export default function OperationsGuidePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       {/* Intro */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <div className="flex items-center gap-2">
           <ClipboardCheck size={20} className="text-slate-500" />
           <h2 className="text-lg font-bold text-slate-900">
@@ -239,7 +239,7 @@ export default function OperationsGuidePage() {
         {ROLES.map((r) => {
           const Icon = r.icon;
           return (
-            <div key={r.code} className={`rounded-xl border border-slate-200 bg-white p-5 ring-2 ${r.ring}`}>
+            <div key={r.code} className={`card p-5 ring-2 ${r.ring}`}>
               <div className="flex items-center gap-3">
                 <span
                   className={`flex h-10 w-10 items-center justify-center rounded-full ${r.bg}`}
@@ -281,7 +281,7 @@ export default function OperationsGuidePage() {
       </div>
 
       {/* Visual flow map */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-5 text-xs font-semibold tracking-widest text-slate-400">
           THE FLOW — STEP BY STEP{" "}
           <span dir="rtl" className="float-right">

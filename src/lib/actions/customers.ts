@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { saveUpload } from "@/lib/storage";
@@ -52,6 +53,11 @@ function readFields(formData: FormData) {
     phone: String(formData.get("phone") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim() || null,
     address: String(formData.get("address") ?? "").trim() || null,
+    streetName: String(formData.get("streetName") ?? "").trim() || null,
+    buildingNumber: String(formData.get("buildingNumber") ?? "").trim() || null,
+    district: String(formData.get("district") ?? "").trim() || null,
+    city: String(formData.get("city") ?? "").trim() || null,
+    postalCode: String(formData.get("postalCode") ?? "").trim() || null,
     crNumber: String(formData.get("crNumber") ?? "").trim() || null,
     vatNumber: String(formData.get("vatNumber") ?? "").trim() || null,
     paymentTerms: String(formData.get("paymentTerms") ?? "CASH") === "CREDIT" ? "CREDIT" : "CASH",
@@ -60,6 +66,7 @@ function readFields(formData: FormData) {
 }
 
 export async function createCustomer(isVendor: boolean, formData: FormData) {
+  await requireCapability("operate");
   const fields = readFields(formData);
   if (!fields.name || !fields.phone) throw new Error("Name and phone are required.");
 
@@ -86,6 +93,7 @@ export async function createCustomer(isVendor: boolean, formData: FormData) {
 }
 
 export async function updateCustomer(id: string, isVendor: boolean, formData: FormData) {
+  await requireCapability("operate");
   const fields = readFields(formData);
 
   const [crDoc, vatDoc] = await Promise.all([
@@ -112,6 +120,7 @@ export async function updateCustomer(id: string, isVendor: boolean, formData: Fo
 }
 
 export async function deleteCustomer(id: string, isVendor: boolean) {
+  await requireCapability("operate");
   await db.customer.delete({ where: { id } });
   const base = isVendor ? "/vendors" : "/customers";
   revalidatePath(base);

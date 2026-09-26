@@ -23,7 +23,7 @@ export default async function NewIncidentPage({
       <Link href="/incidents" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Incidents
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">Report Incident</h2>
         <p className="mb-5 text-sm text-slate-500">Log an issue affecting a trip or general operations.</p>
         <form action={createIncident} className="space-y-4">

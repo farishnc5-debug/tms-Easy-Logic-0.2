@@ -1,3 +1,4 @@
+import { like } from "@/lib/search";
 import Link from "next/link";
 import { Truck, MapPinned, PackageCheck, XCircle, Clock, Download } from "lucide-react";
 import { db } from "@/lib/db";
@@ -52,9 +53,9 @@ export default async function TripsPage({
   }
   if (q) {
     where.OR = [
-      { code: { contains: q } },
-      { driver: { name: { contains: q } } },
-      { vehicle: { plateNumber: { contains: q } } },
+      { code: like(q) },
+      { driver: { name: like(q) } },
+      { vehicle: { plateNumber: like(q) } },
     ];
   }
 
@@ -126,7 +127,7 @@ export default async function TripsPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-        <StatCard icon={Truck} label={tr("Total Trips")} value={totalAll} color="#2563eb" />
+        <StatCard icon={Truck} label={tr("Total Trips")} value={totalAll} color="#ea580c" />
         <StatCard icon={MapPinned} label={tr("Ongoing")} value={ongoing} color="#0284c7" />
         <StatCard
           icon={PackageCheck}
@@ -134,11 +135,11 @@ export default async function TripsPage({
           value={countFor("DELIVERED") + countFor("RETURN_OFFLOADED")}
           color="#16a34a"
         />
-        <StatCard icon={XCircle} label={tr("Cancelled")} value={countFor("CANCELLED")} color="#7c3aed" />
+        <StatCard icon={XCircle} label={tr("Cancelled")} value={countFor("CANCELLED")} color="#64748b" />
         <StatCard icon={Clock} label={tr("Delayed")} value={countFor("DELAYED")} color="#ef4444" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="flex gap-1 overflow-x-auto border-b border-slate-100 px-4 pt-3">
           {TABS.map((t) => (
             <Link

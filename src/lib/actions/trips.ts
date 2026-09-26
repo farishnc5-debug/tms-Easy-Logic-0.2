@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { flowFor } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
@@ -104,6 +105,7 @@ function isFinalStatus(status: string, roundTrip: boolean) {
 }
 
 export async function updateTripStatus(tripId: string, status: string, reason?: string) {
+  await requireCapability("field");
   const trip = await db.trip.findUniqueOrThrow({
     where: { id: tripId },
     include: { shipment: { select: { tripType: true } } },
@@ -199,6 +201,7 @@ export async function updateTripStatus(tripId: string, status: string, reason?: 
 // Step the lifecycle one stage BACKWARD (mistake correction). The recorded
 // progress of the stage being undone is deleted (its timestamp is cleared).
 export async function regressTripStatus(tripId: string) {
+  await requireCapability("operate");
   const trip = await db.trip.findUniqueOrThrow({
     where: { id: tripId },
     include: { shipment: { select: { tripType: true } } },
@@ -287,6 +290,7 @@ export async function regressTripStatus(tripId: string) {
 }
 
 export async function updateTripProgress(tripId: string, progressPct: number) {
+  await requireCapability("field");
   const trip = await db.trip.findUniqueOrThrow({ where: { id: tripId } });
   const t = Math.max(0, Math.min(100, progressPct)) / 100;
   await db.trip.update({
@@ -304,6 +308,7 @@ export async function updateTripProgress(tripId: string, progressPct: number) {
 }
 
 export async function setTripAllowance(formData: FormData) {
+  await requireCapability("operate");
   const tripId = String(formData.get("tripId") ?? "");
   const amountRaw = String(formData.get("driverAllowance") ?? "").trim();
   if (!tripId) throw new Error("Trip is required.");
@@ -331,6 +336,7 @@ export async function setTripAllowance(formData: FormData) {
 // yard must have confirmed receiving the original signed documents first.
 // The accountant can attach the bank/transfer slip as proof.
 export async function sendTripMoney(formData: FormData) {
+  await requireCapability("finance");
   const tripId = String(formData.get("tripId") ?? "");
   if (!tripId) throw new Error("Trip is required.");
   const trip = await db.trip.findUniqueOrThrow({ where: { id: tripId } });
@@ -387,6 +393,7 @@ export async function sendTripMoney(formData: FormData) {
 }
 
 export async function markAllowancePaid(tripId: string, paid: boolean) {
+  await requireCapability("finance");
   const trip = await db.trip.findUniqueOrThrow({ where: { id: tripId } });
   // Yard rule: trip money is only handed over once the driver returns the
   // signed original delivery documents to the yard.
@@ -425,6 +432,7 @@ export async function markAllowancePaid(tripId: string, paid: boolean) {
 }
 
 export async function assignDriverVehicle(tripId: string, driverId: string, vehicleId: string) {
+  await requireCapability("operate");
   const trip = await db.trip.findUniqueOrThrow({ where: { id: tripId } });
   if (trip.driverId && trip.driverId !== driverId) {
     await db.driver.update({ where: { id: trip.driverId }, data: { status: "AVAILABLE" } }).catch(() => {});

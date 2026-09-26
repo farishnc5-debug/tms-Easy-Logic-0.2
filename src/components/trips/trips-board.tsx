@@ -43,7 +43,7 @@ export default function TripsBoard({ trips }: { trips: TripRow[] }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-      <div className="rounded-xl border border-slate-200 bg-white xl:col-span-2">
+      <div className="card xl:col-span-2">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -118,7 +118,7 @@ export default function TripsBoard({ trips }: { trips: TripRow[] }) {
       </div>
 
       <div className="space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="card p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">LIVE TRIP MAP</p>
             <Link href="/map-tracking" className="text-xs font-medium text-brand-600 hover:underline">
@@ -145,7 +145,7 @@ export default function TripsBoard({ trips }: { trips: TripRow[] }) {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="card p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">
               SELECTED TRIP DETAILS

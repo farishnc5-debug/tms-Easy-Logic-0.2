@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { totalsOf } from "@/lib/money";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,6 +12,10 @@ import {
   FileText,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import ZatcaCard from "@/components/settlements/zatca-card";
+import { zatcaStatus } from "@/lib/zatca/service";
+import { getCurrentUser } from "@/lib/auth";
+import { can } from "@/lib/rbac-policy";
 import SettlementStepper from "@/components/settlements/settlement-stepper";
 import ChargesEditor from "@/components/settlements/charges-editor";
 import { StatusBadge, Pill } from "@/components/ui/badge";
@@ -22,7 +27,7 @@ import {
   markSettlementPaid,
   reopenSettlementStep,
 } from "@/lib/actions/settlements";
-import { fmtDate, fmtDateTime } from "@/lib/format";
+import { fmtDate, fmtDateTime, nowMs } from "@/lib/format";
 import { settlementStageOf, SETTLEMENT_STATUS_LABELS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +44,22 @@ export default async function SettlementDetailPage({
     include: {
       customer: true,
       trip: { include: { driver: true } },
-      settlement: { include: { invoice: true } },
+      settlement: {
+        include: {
+          invoice: {
+            include: {
+              charges: true,
+              zatcaDocuments: {
+                orderBy: { createdAt: "desc" },
+                select: {
+                  id: true, docType: true, invoiceType: true, number: true, status: true,
+                  environment: true, createdAt: true, submittedAt: true, response: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
   if (!shipment) notFound();
@@ -49,6 +69,7 @@ export default async function SettlementDetailPage({
   }
 
   const st = shipment.settlement;
+  const [zatca, me] = await Promise.all([zatcaStatus(), getCurrentUser()]);
   const stage = st ? settlementStageOf(st.status) : 1;
   const terms = st?.paymentTerms ?? shipment.customer.paymentTerms;
   const creditDays = st?.creditDays ?? shipment.customer.creditDays;
@@ -122,7 +143,7 @@ export default async function SettlementDetailPage({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {/* Stage action card */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
               NEXT ACTION
             </p>
@@ -238,7 +259,7 @@ export default async function SettlementDetailPage({
                   {fmtDate(st.invoicedAt)} and sent with the originals. Payment due{" "}
                   <span
                     className={
-                      st.paymentDueAt && st.paymentDueAt.getTime() < Date.now()
+                      st.paymentDueAt && st.paymentDueAt.getTime() < nowMs()
                         ? "font-semibold text-red-600"
                         : "font-medium"
                     }
@@ -269,7 +290,7 @@ export default async function SettlementDetailPage({
           </div>
 
           {/* Trip money status */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest text-slate-400">
               <Banknote size={14} /> DRIVER TRIP MONEY
             </p>
@@ -307,7 +328,7 @@ export default async function SettlementDetailPage({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">CUSTOMER</p>
             <p className="font-medium text-slate-800">{shipment.customer.name}</p>
             {shipment.customer.nameAr && (
@@ -333,7 +354,23 @@ export default async function SettlementDetailPage({
             </Link>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          {st?.invoice && (
+            <ZatcaCard
+              invoiceId={st.invoice.id}
+              connected={zatca.onboarded}
+              environment={zatca.environment}
+              canSend={!!me && can(me.role, "finance")}
+              documents={st.invoice.zatcaDocuments
+                .filter((d) => d.environment === (zatca.environment ?? d.environment))
+                .map((d) => ({
+                  ...d,
+                  createdAt: d.createdAt.toISOString(),
+                  submittedAt: d.submittedAt?.toISOString() ?? null,
+                }))}
+            />
+          )}
+
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">SHIPMENT</p>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -355,7 +392,11 @@ export default async function SettlementDetailPage({
                   <div className="flex justify-between">
                     <dt className="text-slate-400">Invoice Amount</dt>
                     <dd className="font-medium text-slate-700">
-                      {(st.invoice.amount * (1 + st.invoice.vatPct / 100)).toLocaleString(
+                      {totalsOf(
+                        st.invoice.amount,
+                        st.invoice.vatPct,
+                        st.invoice.charges.map((c) => c.amount),
+                      ).total.toLocaleString(
                         undefined,
                         { minimumFractionDigits: 2 },
                       )}{" "}

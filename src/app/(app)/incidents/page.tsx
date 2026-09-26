@@ -35,7 +35,7 @@ export default async function IncidentsPage() {
         <StatCard icon={CheckCircle2} label="Resolved" value={resolved} color="#16a34a" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

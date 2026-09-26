@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
+import { totalsOf } from "@/lib/money";
 import { db } from "@/lib/db";
 import { getCompanyProfile } from "@/lib/company";
 import CompanyHeader from "@/components/print/company-header";
 import PrintToolbar from "@/components/print/print-toolbar";
 import { fmtDate } from "@/lib/format";
+import QRCode from "qrcode";
+import { buildQr } from "@/lib/zatca/qr";
+import { riyadhParts } from "@/lib/zatca/service";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +25,11 @@ export default async function InvoicePrintPage({
       where: { id },
       include: {
         charges: true,
+        zatcaDocuments: {
+          where: { docType: "INVOICE" },
+          orderBy: { createdAt: "desc" },
+          select: { status: true, invoiceType: true, qr: true, uuid: true, icv: true, environment: true },
+        },
         settlement: {
           include: {
             shipment: {
@@ -42,11 +51,32 @@ export default async function InvoicePrintPage({
   const shipment = invoice.settlement.shipment;
   const customer = shipment.customer;
   const trip = shipment.trip;
-  const chargesTotal = invoice.charges.reduce((s, c) => s + c.amount, 0);
-  const subtotal = invoice.amount + chargesTotal;
-  const vatAmount = (subtotal * invoice.vatPct) / 100;
-  const total = subtotal + vatAmount;
+  const { subtotal, vat: vatAmount, total } = totalsOf(
+    invoice.amount,
+    invoice.vatPct,
+    invoice.charges.map((c) => c.amount),
+  );
   const isCredit = invoice.settlement.paymentTerms === "CREDIT";
+
+  // ZATCA e-invoice: prefer the accepted document's QR (it carries the cryptographic
+  // stamp). Without one, print a basic (Phase 1) QR so the invoice is still scannable.
+  const zDoc = invoice.zatcaDocuments.find((d) => d.status === "CLEARED" || d.status === "REPORTED");
+  const zLatest = invoice.zatcaDocuments[0];
+  const simplified = zDoc ? zDoc.invoiceType === "SIMPLIFIED" : !customer.vatNumber;
+  let qrPayload: string | null = zDoc?.qr ?? null;
+  if (!qrPayload && company.vatNumber) {
+    const at = riyadhParts(invoice.issuedAt);
+    qrPayload = buildQr({
+      sellerName: company.name,
+      vatNumber: company.vatNumber,
+      timestamp: `${at.date}T${at.time}`,
+      totalWithVat: total.toFixed(2),
+      vatTotal: vatAmount.toFixed(2),
+    });
+  }
+  const qrImage = qrPayload
+    ? await QRCode.toDataURL(qrPayload, { margin: 1, width: 220, errorCorrectionLevel: "M" })
+    : null;
 
   // Everything attached to this shipment, printable together with the invoice
   const isImage = (u: string | null | undefined) =>
@@ -71,7 +101,7 @@ export default async function InvoicePrintPage({
       />
 
       <div className="print-page mx-auto my-6 max-w-[210mm] bg-white p-10 shadow-lg">
-        <CompanyHeader company={company} docTitle="Tax Invoice" docTitleAr="فاتورة ضريبية" />
+        <CompanyHeader company={company} docTitle={simplified ? "Simplified Tax Invoice" : "Tax Invoice"} docTitleAr={simplified ? "فاتورة ضريبية مبسطة" : "فاتورة ضريبية"} />
 
         {/* Reference row */}
         <div className="mt-4 flex justify-between rounded border border-slate-200 bg-slate-50 px-4 py-2 text-xs">
@@ -256,6 +286,39 @@ export default async function InvoicePrintPage({
               {company.bankBeneficiary && <p>Beneficiary: {company.bankBeneficiary}</p>}
               {company.bankIban && <p>IBAN: {company.bankIban}</p>}
               {company.bankAccount && <p>Account No: {company.bankAccount}</p>}
+            </div>
+          </div>
+        )}
+
+        {qrImage && (
+          <div className="mt-5 flex items-center gap-4 rounded border border-slate-200 p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrImage} alt="ZATCA QR code" width={110} height={110} />
+            <div className="text-[11px] leading-relaxed text-slate-500">
+              <p className="font-semibold text-slate-700">
+                {zDoc
+                  ? zDoc.status === "CLEARED"
+                    ? "Cleared by ZATCA (Fatoora) / تم اعتمادها من هيئة الزكاة والضريبة والجمارك"
+                    : "Reported to ZATCA (Fatoora) / تم الإبلاغ عنها لهيئة الزكاة والضريبة والجمارك"
+                  : "E-invoice QR code / رمز الاستجابة السريعة للفاتورة الإلكترونية"}
+              </p>
+              {zDoc ? (
+                <>
+                  <p>Invoice UUID: {zDoc.uuid}</p>
+                  <p>Counter (ICV): {zDoc.icv}</p>
+                  {zDoc.environment !== "PRODUCTION" && (
+                    <p className="font-semibold text-amber-600">
+                      {zDoc.environment} TEST DOCUMENT — NOT LEGALLY VALID
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p>
+                  {zLatest?.status === "REJECTED"
+                    ? "ZATCA rejected this invoice — see the invoice page for the reasons."
+                    : "Not yet submitted to ZATCA. This QR holds the basic invoice data only."}
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -5,21 +5,21 @@ import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 import { LocaleProvider } from "@/components/layout/locale-provider";
 import { getLocale } from "@/lib/i18n.server";
+import AlarmWatcher from "@/components/alarms/alarm-watcher";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [alerts, locale, company] = await Promise.all([
+  const [alerts, locale] = await Promise.all([
     db.alert.findMany({ orderBy: { createdAt: "desc" }, take: 10 }),
     getLocale(),
-    db.companyProfile.findFirst({ select: { name: true } }),
   ]);
 
   return (
     <LocaleProvider locale={locale}>
       <div className="flex min-h-screen bg-slate-50">
-        <Sidebar locale={locale} companyName={company?.name} />
+        <Sidebar locale={locale} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
             locale={locale}
@@ -32,9 +32,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               createdAt: a.createdAt.toISOString(),
             }))}
           />
-          <main className="flex-1 p-4 sm:p-6">{children}</main>
+          <main className="page-in flex-1 p-4 sm:p-6">{children}</main>
         </div>
       </div>
+      <AlarmWatcher locale={locale} />
     </LocaleProvider>
   );
 }

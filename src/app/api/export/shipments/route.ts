@@ -1,5 +1,7 @@
+import { like } from "@/lib/search";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
 
 function csvEscape(v: unknown) {
@@ -9,6 +11,8 @@ function csvEscape(v: unknown) {
 }
 
 export async function GET(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   const sp = req.nextUrl.searchParams;
   const where: Prisma.ShipmentWhereInput = {};
   const status = sp.get("status");
@@ -20,10 +24,10 @@ export async function GET(req: NextRequest) {
   if (destination) where.destinationName = destination;
   if (q) {
     where.OR = [
-      { code: { contains: q } },
-      { customer: { name: { contains: q } } },
-      { originName: { contains: q } },
-      { destinationName: { contains: q } },
+      { code: like(q) },
+      { customer: { name: like(q) } },
+      { originName: like(q) },
+      { destinationName: like(q) },
     ];
   }
 

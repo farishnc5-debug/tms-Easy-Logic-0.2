@@ -3,6 +3,10 @@
  * Fetches vehicle locations from the Tracking Maps GPS platform
  */
 
+// A loosely-typed record from the GPS server's JSON (field names vary by platform)
+type RawRecord = Record<string, string | number | undefined>;
+const num = (x: unknown) => parseFloat(String(x));
+
 export interface TrackingMapsConfig {
   serverUrl: string; // e.g., https://tracmap3.com
   username: string;
@@ -73,7 +77,7 @@ export class TrackingMapsAdapter {
 
       // Try the common GPS API endpoint
       const response = await fetch(
-        `${this.config.serverUrl}/api/vehicles` || `${this.config.serverUrl}/api/locations`,
+        `${this.config.serverUrl}/api/vehicles`,
         {
           method: "GET",
           credentials: "include",
@@ -93,16 +97,16 @@ export class TrackingMapsAdapter {
         ? data
         : data.vehicles || data.devices || data.locations || [];
 
-      return vehicles.map((v: any) => ({
-        deviceId: v.id || v.device_id || v.imei || v.name,
-        latitude: parseFloat(v.latitude || v.lat),
-        longitude: parseFloat(v.longitude || v.lon || v.lng),
-        speed: v.speed ? parseFloat(v.speed) : undefined,
-        heading: v.course || v.heading ? parseFloat(v.course || v.heading) : undefined,
+      return (vehicles as RawRecord[]).map((v) => ({
+        deviceId: String(v.id || v.device_id || v.imei || v.name),
+        latitude: num(v.latitude || v.lat),
+        longitude: num(v.longitude || v.lon || v.lng),
+        speed: v.speed ? num(v.speed) : undefined,
+        heading: v.course || v.heading ? num(v.course || v.heading) : undefined,
         timestamp: v.timestamp
           ? new Date(v.timestamp)
           : new Date(v.update_time || v.lastSeen || Date.now()),
-        accuracy: v.accuracy ? parseFloat(v.accuracy) : undefined,
+        accuracy: v.accuracy ? num(v.accuracy) : undefined,
       }));
     } catch (err) {
       console.error("Failed to fetch locations:", err);
@@ -144,14 +148,14 @@ export class TrackingMapsAdapter {
       const data = await response.json();
       const points = Array.isArray(data) ? data : data.locations || [];
 
-      return points.map((p: any) => ({
+      return (points as RawRecord[]).map((p) => ({
         deviceId,
-        latitude: parseFloat(p.latitude || p.lat),
-        longitude: parseFloat(p.longitude || p.lon),
-        speed: p.speed ? parseFloat(p.speed) : undefined,
-        heading: p.course ? parseFloat(p.course) : undefined,
-        timestamp: new Date(p.timestamp || p.time),
-        accuracy: p.accuracy ? parseFloat(p.accuracy) : undefined,
+        latitude: num(p.latitude || p.lat),
+        longitude: num(p.longitude || p.lon),
+        speed: p.speed ? num(p.speed) : undefined,
+        heading: p.course ? num(p.course) : undefined,
+        timestamp: new Date(String(p.timestamp || p.time)),
+        accuracy: p.accuracy ? num(p.accuracy) : undefined,
       }));
     } catch (err) {
       console.error("Failed to fetch location history:", err);

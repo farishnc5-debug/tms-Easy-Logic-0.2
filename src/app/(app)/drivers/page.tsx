@@ -31,7 +31,7 @@ export default async function DriversPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard icon={Users} label={tr("Total Drivers")} value={drivers.length} color="#2563eb" />
+        <StatCard icon={Users} label={tr("Total Drivers")} value={drivers.length} color="#ea580c" />
         <StatCard icon={CheckCircle2} label={tr("Available")} value={countFor("AVAILABLE")} color="#16a34a" />
         <StatCard icon={Truck} label={tr("ON TRIP")} value={countFor("ON_TRIP")} color="#0284c7" />
         <StatCard icon={Moon} label={tr("Off Duty")} value={countFor("OFF_DUTY")} color="#94a3b8" />
@@ -42,7 +42,7 @@ export default async function DriversPage() {
           <Link
             key={d.id}
             href={`/drivers/${d.id}`}
-            className="rounded-xl border border-slate-200 bg-white p-4 hover:shadow-sm"
+            className="card p-4 hover:shadow-sm"
           >
             <div className="flex items-center gap-3">
               <Avatar name={d.name} size={44} />
@@ -63,7 +63,7 @@ export default async function DriversPage() {
       </div>
 
       {drivers.length === 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">
+        <div className="card p-12 text-center text-sm text-slate-400">
           No drivers yet.
         </div>
       )}

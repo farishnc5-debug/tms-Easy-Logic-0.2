@@ -1,3 +1,15 @@
+// Scopes an API key (used by external systems / the future Agent TMS) can
+// be granted. Lives here (not in lib/actions/api-keys.ts) because a
+// "use server" file may only export async functions — this constant is
+// imported by both the server action (to validate) and the client UI (to
+// render checkboxes).
+export const API_KEY_SCOPES = [
+  { code: "shipments:read", label: "Read shipments" },
+  { code: "shipments:write", label: "Create / update shipments" },
+  { code: "trips:read", label: "Read trips & live status" },
+  { code: "customers:read", label: "Read customers" },
+] as const;
+
 export const ROLES = [
   "ADMIN",
   "OPERATIONS_MANAGER",

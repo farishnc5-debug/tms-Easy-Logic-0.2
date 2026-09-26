@@ -40,7 +40,7 @@ export default function CascadingFilters({
   const anyFilter = selected.vendorId || selected.origin || selected.destination || selected.vehicleType;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="card p-4">
       <div className="mb-2 flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-xs font-semibold tracking-widest text-slate-400">
           <SlidersHorizontal size={13} /> FIND A RATE — CHOOSE VENDOR, THEN LANE, THEN EQUIPMENT

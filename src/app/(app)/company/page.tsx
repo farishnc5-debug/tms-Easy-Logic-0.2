@@ -59,7 +59,7 @@ export default async function CompanyPage({
       )}
 
       <form action={updateCompanyProfile} className="space-y-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-widest text-slate-400">
             <Building2 size={14} /> BASIC INFORMATION
           </p>
@@ -78,10 +78,21 @@ export default async function CompanyPage({
             </div>
             <Field label="City" name="city" defaultValue={profile.city} />
             <Field label="Country" name="country" defaultValue={profile.country} />
+            <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+              <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
+                NATIONAL ADDRESS (required on ZATCA e-invoices)
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Street name" name="streetName" defaultValue={profile.streetName} />
+                <Field label="Building number (4 digits)" name="buildingNumber" defaultValue={profile.buildingNumber} placeholder="1234" />
+                <Field label="District" name="district" defaultValue={profile.district} />
+                <Field label="Postal code (5 digits)" name="postalCode" defaultValue={profile.postalCode} placeholder="21523" />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-widest text-slate-400">
             <FileCheck2 size={14} /> LEGAL REGISTRATION
           </p>
@@ -91,7 +102,7 @@ export default async function CompanyPage({
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-widest text-slate-400">
             <Landmark size={14} /> BANK ACCOUNT DETAILS
           </p>

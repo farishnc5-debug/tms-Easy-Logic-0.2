@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { saveUpload } from "@/lib/storage";
 
 export async function uploadDocument(formData: FormData) {
+  await requireCapability("field");
   const file = formData.get("file") as File | null;
   const shipmentId = String(formData.get("shipmentId") ?? "") || null;
   const tripId = String(formData.get("tripId") ?? "") || null;
@@ -34,6 +36,7 @@ export async function uploadDocument(formData: FormData) {
 }
 
 export async function deleteDocument(id: string) {
+  await requireCapability("operate");
   const doc = await db.document.delete({ where: { id } });
   revalidatePath("/documents");
   if (doc.shipmentId) revalidatePath(`/shipments/${doc.shipmentId}`);

@@ -28,7 +28,7 @@ export default async function PodPage() {
         <StatCard icon={BadgeCheck} label="Completed PODs" value={completedPods.length} color="#16a34a" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
           AWAITING PROOF OF DELIVERY
         </p>
@@ -57,7 +57,7 @@ export default async function PodPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">RECENT PODs</p>
         {completedPods.length === 0 ? (
           <p className="text-sm text-slate-400">No proof of delivery records yet.</p>

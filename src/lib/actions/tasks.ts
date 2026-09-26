@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function createTask(formData: FormData) {
+  await requireCapability("operate");
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
   const priority = String(formData.get("priority") ?? "MEDIUM");
@@ -22,11 +24,13 @@ export async function createTask(formData: FormData) {
 }
 
 export async function updateTaskStatus(id: string, status: string) {
+  await requireCapability("field");
   await db.task.update({ where: { id }, data: { status } });
   revalidatePath("/tasks");
 }
 
 export async function deleteTask(id: string) {
+  await requireCapability("operate");
   await db.task.delete({ where: { id } });
   revalidatePath("/tasks");
 }

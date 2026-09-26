@@ -1,31 +1,34 @@
+import { like } from "@/lib/search";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
+  if (!(await getCurrentUser())) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json({ results: [] });
 
   const [shipments, trips, drivers, customers, vehicles] = await Promise.all([
     db.shipment.findMany({
-      where: { OR: [{ code: { contains: q } }, { originName: { contains: q } }] },
+      where: { OR: [{ code: like(q) }, { originName: like(q) }] },
       take: 5,
       include: { customer: true },
     }),
     db.trip.findMany({
-      where: { code: { contains: q } },
+      where: { code: like(q) },
       take: 5,
       include: { driver: true },
     }),
     db.driver.findMany({
-      where: { OR: [{ name: { contains: q } }, { phone: { contains: q } }] },
+      where: { OR: [{ name: like(q) }, { phone: like(q) }] },
       take: 5,
     }),
     db.customer.findMany({
-      where: { OR: [{ name: { contains: q } }, { company: { contains: q } }] },
+      where: { OR: [{ name: like(q) }, { company: like(q) }] },
       take: 5,
     }),
     db.vehicle.findMany({
-      where: { plateNumber: { contains: q } },
+      where: { plateNumber: like(q) },
       take: 5,
     }),
   ]);

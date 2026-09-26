@@ -75,7 +75,9 @@ export default function Topbar({
   const [profileOpen, setProfileOpen] = useState(false);
   const [alerts, setAlerts] = useState(initialAlerts);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [rawResults, setResults] = useState<SearchResult[]>([]);
+  // Hide stale results as soon as the query is cleared / too short
+  const results = query.trim().length >= 2 ? rawResults : [];
   const [searchOpen, setSearchOpen] = useState(false);
 
   const notifRef = useRef<HTMLDivElement>(null);
@@ -96,10 +98,7 @@ export default function Topbar({
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
-      setResults([]);
-      return;
-    }
+    if (q.length < 2) return;
     const ctrl = new AbortController();
     const t = setTimeout(() => {
       fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal })
@@ -175,10 +174,10 @@ export default function Topbar({
             }}
             onFocus={() => setSearchOpen(true)}
             placeholder={tr("Search anything... (Ctrl + K)", locale)}
-            className="w-64 rounded-lg border border-slate-200 bg-slate-50 py-2 ps-9 pe-3 text-sm text-slate-700 outline-none focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
+            className="w-64 rounded-lg border border-slate-200 bg-slate-50 py-2 ps-9 pe-3 text-sm text-slate-700 outline-none focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100"
           />
           {searchOpen && query.trim().length >= 2 && (
-            <div className="absolute end-0 mt-2 w-96 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+            <div className="pop absolute end-0 mt-2 w-96 p-2">
               {results.length === 0 ? (
                 <p className="px-3 py-4 text-center text-sm text-slate-400">
                   {tr("No results found", locale)}
@@ -223,12 +222,12 @@ export default function Topbar({
             )}
           </button>
           {notifOpen && (
-            <div className="absolute end-0 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-lg">
+            <div className="pop absolute end-0 mt-2 w-80">
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <p className="text-sm font-semibold text-slate-800">{tr("Notifications", locale)}</p>
                 <button
                   onClick={markAllRead}
-                  className="text-xs font-medium text-sky-600 hover:underline"
+                  className="text-xs font-medium text-brand-600 hover:underline"
                 >
                   {tr("Mark all read", locale)}
                 </button>
@@ -242,7 +241,7 @@ export default function Topbar({
                 {alerts.map((a) => (
                   <li
                     key={a.id}
-                    className={`flex gap-2 border-b border-slate-50 px-4 py-3 text-sm ${!a.read ? "bg-sky-50/50" : ""}`}
+                    className={`flex gap-2 border-b border-slate-50 px-4 py-3 text-sm ${!a.read ? "bg-brand-50/60" : ""}`}
                   >
                     <span
                       className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
@@ -278,7 +277,7 @@ export default function Topbar({
             </div>
           </button>
           {profileOpen && (
-            <div className="absolute end-0 mt-2 w-52 rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+            <div className="pop absolute end-0 mt-2 w-52 py-1">
               <Link
                 href="/settings"
                 className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -302,11 +301,11 @@ export default function Topbar({
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <div className="absolute start-0 top-0 h-full w-72 overflow-y-auto bg-[#0b1b3a] p-4">
+          <div className="absolute start-0 top-0 h-full w-72 overflow-y-auto bg-brand-950 p-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-lg font-extrabold leading-tight tracking-wide text-white">
-                  Easy <span className="text-sky-400">Logic</span>
+                  Easy <span className="text-brand-400">Logic</span>
                 </p>
                 <p className="text-[9px] tracking-[0.25em] text-slate-400">
                   INTELLIGENT LOGISTICS OS
@@ -338,7 +337,7 @@ export default function Topbar({
                           onClick={() => setMobileOpen(false)}
                           className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
                             active
-                              ? "bg-sky-500/15 text-sky-300 font-medium"
+                              ? "bg-brand-500/20 text-brand-300 font-medium"
                               : "text-slate-300 hover:bg-white/5 hover:text-white"
                           }`}
                         >

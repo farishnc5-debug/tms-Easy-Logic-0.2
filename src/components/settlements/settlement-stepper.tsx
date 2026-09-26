@@ -41,7 +41,7 @@ export default function SettlementStepper({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="card p-5">
       <p className="mb-5 text-xs font-semibold tracking-widest text-slate-400">
         PAYMENT FOLLOW-UP — ORIGINALS, INVOICE & COLLECTION
       </p>

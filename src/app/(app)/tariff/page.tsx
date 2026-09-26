@@ -77,7 +77,7 @@ export default async function TariffPage({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <div className="flex items-center gap-2">
           <Route size={18} className="text-slate-500" />
           <h2 className="text-base font-semibold text-slate-900">Carrier Tariff Book</h2>
@@ -104,9 +104,9 @@ export default async function TariffPage({
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <StatCard icon={Route} label="Lanes Shown" value={lanes.length} color="#2563eb" />
+            <StatCard icon={Route} label="Lanes Shown" value={lanes.length} color="#ea580c" />
             <StatCard icon={BadgeCheck} label="Confirmed Actuals" value={actuals} color="#16a34a" />
-            <StatCard icon={Wallet} label="Lanes Priced for Sale" value={priced.length} color="#7c3aed" />
+            <StatCard icon={Wallet} label="Lanes Priced for Sale" value={priced.length} color="#0d9488" />
             <StatCard
               icon={Percent}
               label="Avg. Margin"
@@ -152,7 +152,7 @@ export default async function TariffPage({
             defaultVendorId={vendorId}
           />
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto card">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-start text-xs font-medium uppercase tracking-wide text-slate-400">

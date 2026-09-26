@@ -37,7 +37,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </form>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">{vehicle.plateNumber}</h2>
         <p className="mb-5 text-sm text-slate-500">{vehicle.vehicleType}</p>
         <form action={action} className="space-y-5">
@@ -59,7 +59,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {vehicle.drivers.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">ASSIGNED DRIVERS</p>
           <ul className="space-y-2">
             {vehicle.drivers.map((d) => (
@@ -74,7 +74,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">RECENT TRIPS</p>
         {vehicle.trips.length === 0 ? (
           <p className="text-sm text-slate-400">No trips recorded yet.</p>

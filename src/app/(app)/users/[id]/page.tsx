@@ -1,3 +1,4 @@
+import { requirePageCapability } from "@/lib/page-guards";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
@@ -8,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { ROLES, ROLE_LABELS } from "@/lib/constants";
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requirePageCapability("admin");
   const { id } = await params;
   const user = await db.user.findUnique({ where: { id } });
   if (!user) notFound();
@@ -31,7 +33,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         </form>
       </div>
 
-      <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex items-center gap-4 card p-6">
         <Avatar name={user.name} size={56} />
         <div>
           <h2 className="text-lg font-semibold text-slate-900">{user.name}</h2>
@@ -39,7 +41,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <form action={action} className="space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>

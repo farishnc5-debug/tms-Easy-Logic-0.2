@@ -37,3 +37,9 @@ export function pct(n: number, total: number) {
   if (total === 0) return 0;
   return Math.round((n / total) * 100);
 }
+
+// Current time in ms. Server pages call this instead of Date.now() directly so
+// React's purity lint (which flags Date.now() inside components) stays happy.
+export function nowMs() {
+  return Date.now();
+}

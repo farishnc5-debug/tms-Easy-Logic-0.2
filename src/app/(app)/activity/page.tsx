@@ -1,3 +1,4 @@
+import { like } from "@/lib/search";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { History } from "lucide-react";
@@ -64,9 +65,9 @@ export default async function ActivityPage({
   if (action) where.action = action;
   if (q) {
     where.OR = [
-      { entityRef: { contains: q } },
-      { userName: { contains: q } },
-      { entityId: { contains: q } },
+      { entityRef: like(q) },
+      { userName: like(q) },
+      { entityId: like(q) },
     ];
   }
 
@@ -85,7 +86,7 @@ export default async function ActivityPage({
         </p>
       </div>
 
-      <form className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+      <form className="flex flex-wrap items-center gap-2 card p-3">
         <input
           name="q"
           defaultValue={q}
@@ -112,7 +113,7 @@ export default async function ActivityPage({
         </button>
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-left text-xs font-medium uppercase tracking-wide text-slate-400">

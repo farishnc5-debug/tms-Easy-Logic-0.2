@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { genCode, coordFor, VEHICLE_TYPES, isColdSelection } from "@/lib/constants";
@@ -118,6 +119,7 @@ async function resolveAgreedRate(
 }
 
 export async function createShipment(formData: FormData) {
+  await requireCapability("operate");
   const customerId = String(formData.get("customerId") ?? "");
   const originName = String(formData.get("originName") ?? "").trim();
   const destinationName = String(formData.get("destinationName") ?? "").trim();
@@ -174,6 +176,7 @@ export async function createShipment(formData: FormData) {
 }
 
 export async function updateShipment(id: string, formData: FormData) {
+  await requireCapability("operate");
   // Bookings are locked once a driver is dispatched — only cancellation is allowed
   const existingTrip = await db.trip.findUnique({ where: { shipmentId: id } });
   if (existingTrip) {
@@ -231,6 +234,7 @@ export async function updateShipment(id: string, formData: FormData) {
 }
 
 export async function deleteShipment(id: string) {
+  await requireCapability("operate");
   const doomed = await db.shipment.findUnique({ where: { id }, select: { code: true, status: true } });
   await logAudit({
     action: "SHIPMENT_DELETED",
@@ -259,6 +263,7 @@ export async function deleteShipment(id: string) {
 }
 
 export async function dispatchShipment(formData: FormData) {
+  await requireCapability("operate");
   const shipmentId = String(formData.get("shipmentId") ?? "");
   const manualMode = String(formData.get("manualMode") ?? "") === "1";
   const driverId = String(formData.get("driverId") ?? "");
@@ -358,6 +363,7 @@ export async function dispatchShipment(formData: FormData) {
 // After dispatch, a booking can only be cancelled — never edited — and the
 // operator must record why.
 export async function cancelBooking(formData: FormData) {
+  await requireCapability("operate");
   const shipmentId = String(formData.get("shipmentId") ?? "");
   const reason = String(formData.get("reason") ?? "").trim();
   if (!shipmentId) throw new Error("Shipment is required.");
@@ -393,4 +399,28 @@ export async function cancelBooking(formData: FormData) {
   revalidatePath("/trips");
   revalidatePath("/dashboard");
   redirect(`/shipments/${shipmentId}`);
+}
+
+// Wasiqa is the transport document issued via Saudi Arabia's Transport
+// General Authority (TGA) portal. Recorded manually here — there is no
+// automated TGA API integration, so this only reflects what was entered.
+export async function updateWasiqa(shipmentId: string, formData: FormData) {
+  await requireCapability("operate");
+  const wasiqaNumber = String(formData.get("wasiqaNumber") ?? "").trim() || null;
+  const wasiqaStatus = String(formData.get("wasiqaStatus") ?? "").trim() || null;
+  const wasiqaIssuedAtRaw = String(formData.get("wasiqaIssuedAt") ?? "");
+  const wasiqaNotes = String(formData.get("wasiqaNotes") ?? "").trim() || null;
+  const wasiqaIssuedAt = wasiqaIssuedAtRaw ? new Date(wasiqaIssuedAtRaw) : null;
+
+  await db.shipment.update({
+    where: { id: shipmentId },
+    data: { wasiqaNumber, wasiqaStatus, wasiqaIssuedAt, wasiqaNotes },
+  });
+  await logAudit({
+    action: "WASIQA_UPDATED",
+    entity: "Shipment",
+    entityId: shipmentId,
+    after: { wasiqaNumber, wasiqaStatus },
+  });
+  revalidatePath(`/shipments/${shipmentId}`);
 }

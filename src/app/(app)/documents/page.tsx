@@ -40,7 +40,7 @@ export default async function DocumentsPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold tracking-widest text-slate-400">
           <Upload size={14} /> UPLOAD DOCUMENT
         </p>
@@ -62,7 +62,7 @@ export default async function DocumentsPage({
         </form>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

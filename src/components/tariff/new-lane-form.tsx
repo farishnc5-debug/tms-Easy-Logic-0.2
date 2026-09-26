@@ -43,7 +43,7 @@ export default function NewLaneForm({
           setOpen(false);
         })
       }
-      className="rounded-xl border border-slate-200 bg-white p-4"
+      className="card p-4"
     >
       <div className="mb-3 flex items-center justify-between">
         <p className="text-xs font-semibold tracking-widest text-slate-400">ADD LANE</p>

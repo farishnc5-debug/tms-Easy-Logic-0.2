@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { VEHICLE_TYPES } from "@/lib/constants";
@@ -18,6 +19,7 @@ function num(formData: FormData, key: string) {
 // vehicle type — the same route can price differently per vendor, and
 // differently again per equipment type at the same vendor.
 export async function saveLane(formData: FormData) {
+  await requireCapability("finance");
   const id = String(formData.get("id") ?? "").trim();
   const vendorId = String(formData.get("vendorId") ?? "").trim();
   const originCity = String(formData.get("originCity") ?? "").trim();
@@ -90,6 +92,7 @@ export async function saveLane(formData: FormData) {
 }
 
 export async function deleteLane(id: string) {
+  await requireCapability("finance");
   const lane = await db.carrierRate.findUnique({ where: { id }, include: { vendor: true } });
   await db.carrierRate.delete({ where: { id } });
   await logAudit({

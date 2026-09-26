@@ -55,7 +55,7 @@ export default async function MaintenancePage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <div className="flex items-center gap-2 card px-4 py-3">
           <Wrench size={18} className="text-slate-500" />
           <span className="text-sm text-slate-600">
             {tr("FAW JH6 (2025) preventive maintenance plan — services fall due by kilometer interval.")}
@@ -70,7 +70,7 @@ export default async function MaintenancePage({
       </div>
 
       {/* Fleet maintenance board */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto card">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100 text-left text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -198,7 +198,7 @@ export default async function MaintenancePage({
       {selected && (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="space-y-4 xl:col-span-2">
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
                 {selected.v.plateNumber} — SERVICE SCHEDULE (FAW PLAN)
               </p>
@@ -237,7 +237,7 @@ export default async function MaintenancePage({
               </table>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
                 {tr("SERVICE HISTORY")}
               </p>
@@ -269,7 +269,7 @@ export default async function MaintenancePage({
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
                 {tr("LOG COMPLETED SERVICE")}
               </p>
@@ -326,7 +326,7 @@ export default async function MaintenancePage({
 
             {/* FAW checklist for the most urgent service */}
             {selected.next && (
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="card p-5">
                 <p className="mb-2 text-xs font-semibold tracking-widest text-slate-400">
                   {selected.next.code} CHECKLIST — {selected.next.label.toUpperCase()}
                 </p>
@@ -345,7 +345,7 @@ export default async function MaintenancePage({
       )}
 
       {/* Daily inspection reference */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-2 text-xs font-semibold tracking-widest text-slate-400">
           PM-A — DAILY INSPECTION (DRIVER SIGNS BEFORE DISPATCH)
         </p>

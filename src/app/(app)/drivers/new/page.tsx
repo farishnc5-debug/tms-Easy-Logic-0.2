@@ -11,7 +11,7 @@ export default async function NewDriverPage() {
       <Link href="/drivers" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Drivers
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">Add Driver</h2>
         <p className="mb-5 text-sm text-slate-500">Register a new driver.</p>
         <form action={createDriver} className="space-y-5">

@@ -29,7 +29,7 @@ export default async function EditShipmentPage({ params }: { params: Promise<{ i
       <Link href={`/shipments/${id}`} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Shipment
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">Edit Shipment {shipment.code}</h2>
         <p className="mb-5 text-sm text-slate-500">Update shipment details.</p>
         <form action={action} className="space-y-5">

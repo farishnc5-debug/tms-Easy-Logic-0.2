@@ -1,6 +1,9 @@
 "use server";
 
+import { parseVatPct } from "@/lib/money";
+import { submitInvoiceToZatca } from "@/lib/zatca/service";
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { genCode } from "@/lib/constants";
@@ -15,6 +18,7 @@ function revalidateSettlement(shipmentId: string) {
 // Settlements are created lazily for delivered shipments, snapshotting the
 // customer's agreed payment terms at that moment.
 export async function ensureSettlement(shipmentId: string) {
+  await requireCapability("operate");
   const existing = await db.settlement.findUnique({ where: { shipmentId } });
   if (existing) return existing;
   const shipment = await db.shipment.findUniqueOrThrow({
@@ -34,6 +38,7 @@ export async function ensureSettlement(shipmentId: string) {
 // Yard supervisor / dispatcher confirms the driver returned the signed
 // originals. This is the gate that releases the driver's trip money.
 export async function receiveOriginals(shipmentId: string) {
+  await requireCapability("operate");
   const settlement = await ensureSettlement(shipmentId);
   await db.settlement.update({
     where: { id: settlement.id },
@@ -71,6 +76,7 @@ export async function receiveOriginals(shipmentId: string) {
 }
 
 export async function handToAccounts(shipmentId: string) {
+  await requireCapability("operate");
   const settlement = await db.settlement.findUniqueOrThrow({ where: { shipmentId } });
   if (!settlement.docsReceivedAt) {
     throw new Error("Originals must be received in the yard first.");
@@ -101,11 +107,10 @@ async function nextInvoiceCode() {
 }
 
 export async function issueInvoice(formData: FormData) {
+  await requireCapability("finance");
   const shipmentId = String(formData.get("shipmentId") ?? "");
   const amount = Number(formData.get("amount") ?? 0);
-  const vatPct = formData.get("vatPct") !== null && formData.get("vatPct") !== ""
-    ? Number(formData.get("vatPct"))
-    : 15;
+  const vatPct = parseVatPct(formData.get("vatPct"));
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
   if (!shipmentId || !amount || amount <= 0) {
@@ -173,12 +178,22 @@ export async function issueInvoice(formData: FormData) {
     },
   });
 
+  // If ZATCA e-invoicing is connected, send it right away. This must never
+  // block invoicing: on any problem the invoice stays issued and the status
+  // (with ZATCA's reasons) is shown on the invoice, where it can be retried.
+  try {
+    await submitInvoiceToZatca(invoice.id, "INVOICE");
+  } catch (err) {
+    console.error("Automatic ZATCA submission failed:", err);
+  }
+
   revalidateSettlement(shipmentId);
   redirect(`/print/invoice/${invoice.id}`);
 }
 
 // Accounts department records the customer's payment and closes the shipment.
 export async function markSettlementPaid(shipmentId: string) {
+  await requireCapability("finance");
   const settlement = await db.settlement.findUniqueOrThrow({ where: { shipmentId } });
   if (!settlement.invoicedAt) {
     throw new Error("Issue the invoice before marking the shipment as paid.");
@@ -199,6 +214,7 @@ export async function markSettlementPaid(shipmentId: string) {
 }
 
 export async function reopenSettlementStep(shipmentId: string) {
+  await requireCapability("finance");
   // one step back for corrections (accounts/yard mis-clicks)
   const s = await db.settlement.findUniqueOrThrow({
     where: { shipmentId },

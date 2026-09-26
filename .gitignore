@@ -48,3 +48,9 @@ next-env.d.ts
 /backups/
 /storage/uploads/
 .pgpassword
+
+# full data dump for DB migration — contains business data
+/data-export.json
+
+# keep the documented template
+!.env.example

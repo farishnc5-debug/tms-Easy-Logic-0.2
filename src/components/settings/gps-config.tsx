@@ -119,7 +119,7 @@ export default function GPSConfig() {
             <li>Log in to your Tracking Maps account at {serverUrl}</li>
             <li>Go to Devices → Link each vehicle to a GPS device</li>
             <li>Enter your account credentials above</li>
-            <li>Click "Test GPS Connection"</li>
+            <li>Click &quot;Test GPS Connection&quot;</li>
             <li>Vehicle locations will update every 30 seconds on the Live Map</li>
           </ol>
         </div>

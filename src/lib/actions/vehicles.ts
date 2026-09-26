@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 
 export async function createVehicle(formData: FormData) {
+  await requireCapability("operate");
   const plateNumber = String(formData.get("plateNumber") ?? "").trim();
   const vehicleType = String(formData.get("vehicleType") ?? "").trim();
   const capacityTon = formData.get("capacityTon") ? Number(formData.get("capacityTon")) : null;
@@ -22,6 +24,7 @@ export async function createVehicle(formData: FormData) {
 }
 
 export async function updateVehicle(id: string, formData: FormData) {
+  await requireCapability("operate");
   const plateNumber = String(formData.get("plateNumber") ?? "").trim();
   const vehicleType = String(formData.get("vehicleType") ?? "").trim();
   const capacityTon = formData.get("capacityTon") ? Number(formData.get("capacityTon")) : null;
@@ -39,6 +42,7 @@ export async function updateVehicle(id: string, formData: FormData) {
 }
 
 export async function deleteVehicle(id: string) {
+  await requireCapability("operate");
   await db.driver.updateMany({ where: { vehicleId: id }, data: { vehicleId: null } });
   await db.vehicle.delete({ where: { id } });
   revalidatePath("/fleet");

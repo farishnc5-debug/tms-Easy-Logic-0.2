@@ -31,6 +31,8 @@ import {
   Wrench,
   ClipboardCheck,
   Route,
+  Webhook,
+  Search,
 } from "lucide-react";
 
 export type NavItem = {
@@ -106,6 +108,10 @@ export const NAV_SECTIONS: NavSectionT[] = [
       { label: "Settings", href: "/settings", icon: Settings },
     ],
   },
+  {
+    title: "CONNECTIONS",
+    items: [{ label: "Connections (API / MCP)", href: "/connections", icon: Webhook }],
+  },
 ];
 
 export const ALL_NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap((s) => s.items);
@@ -139,10 +145,10 @@ function NavSection({
               <Link
                 href={item.href}
                 title={collapsed ? t(item.label, locale) : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+                className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-full before:transition-colors ${
                   active
-                    ? "bg-brand-500/20 text-brand-300 font-medium"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    ? "bg-brand-500/15 font-medium text-white before:bg-brand-400"
+                    : "text-slate-300 before:bg-transparent hover:bg-white/5 hover:text-white"
                 } ${collapsed ? "justify-center" : ""}`}
               >
                 <Icon size={18} className="shrink-0" />
@@ -158,14 +164,24 @@ function NavSection({
 
 export default function Sidebar({
   locale,
-  companyName,
 }: {
   locale: Locale;
-  // Subscriber (tenant) company name from Company Profile
-  companyName?: string | null;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [query, setQuery] = useState("");
+
+  // Live menu filter: typing narrows the nav to matching items as a flat
+  // list. Matches the translated label and the raw English label, so Latin
+  // typing works even when the UI is in Arabic.
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? ALL_NAV_ITEMS.filter(
+        (i) =>
+          t(i.label, locale).toLowerCase().includes(q) ||
+          i.label.toLowerCase().includes(q),
+      )
+    : null;
 
   return (
     <aside
@@ -173,7 +189,7 @@ export default function Sidebar({
         collapsed ? "w-[76px]" : "w-64"
       }`}
     >
-      <div className="px-4 py-5">
+      <div className="border-b border-white/10 bg-gradient-to-b from-brand-900/40 to-transparent px-4 py-5">
         {!collapsed ? (
           <>
             <p className="text-xl font-extrabold leading-tight tracking-wide text-white">
@@ -182,11 +198,19 @@ export default function Sidebar({
             <p className="text-[9px] tracking-[0.25em] text-slate-400">
               {t("INTELLIGENT LOGISTICS OS", locale)}
             </p>
-            {companyName && (
-              <p className="mt-2 truncate rounded-md bg-white/5 px-2 py-1 text-[11px] font-semibold text-brand-200">
-                {companyName}
-              </p>
-            )}
+            <div className="relative mt-3">
+              <Search
+                size={15}
+                className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={locale === "ar" ? "بحث في القائمة..." : "Search menu..."}
+                aria-label={locale === "ar" ? "بحث في القائمة" : "Search menu"}
+                className="w-full rounded-lg border border-white/10 bg-white/5 py-2 ps-8 pe-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-brand-400/60 focus:bg-white/10 focus:ring-2 focus:ring-brand-500/25"
+              />
+            </div>
           </>
         ) : (
           <div className="mx-auto text-center text-lg font-extrabold text-white">
@@ -196,18 +220,52 @@ export default function Sidebar({
       </div>
 
       <nav className="mt-2 flex-1 overflow-y-auto pb-4">
-        {NAV_SECTIONS.map((section, i) => (
-          <div key={section.title}>
-            {i > 0 && <div className="my-2 border-t border-white/10" />}
-            <NavSection
-              title={section.title}
-              items={section.items}
-              pathname={pathname}
-              collapsed={collapsed}
-              locale={locale}
-            />
+        {matches ? (
+          <div className="px-3">
+            {matches.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-slate-400">
+                {t("No results found", locale)}
+              </p>
+            ) : (
+              <ul className="space-y-0.5">
+                {matches.map((item) => {
+                  const active =
+                    pathname === item.href || pathname.startsWith(item.href + "/");
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setQuery("")}
+                        className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-full ${
+                          active
+                            ? "bg-brand-500/15 font-medium text-white before:bg-brand-400"
+                            : "text-slate-300 before:bg-transparent hover:bg-white/5 hover:text-white"
+                        }`}
+                      >
+                        <Icon size={18} className="shrink-0" />
+                        <span className="truncate">{t(item.label, locale)}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-        ))}
+        ) : (
+          NAV_SECTIONS.map((section, i) => (
+            <div key={section.title}>
+              {i > 0 && <div className="my-2 border-t border-white/10" />}
+              <NavSection
+                title={section.title}
+                items={section.items}
+                pathname={pathname}
+                collapsed={collapsed}
+                locale={locale}
+              />
+            </div>
+          ))
+        )}
       </nav>
 
       <div className="space-y-1 border-t border-white/10 p-3">

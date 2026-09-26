@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function createIncident(formData: FormData) {
+  await requireCapability("field");
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const severity = String(formData.get("severity") ?? "MEDIUM");
@@ -36,6 +38,7 @@ export async function createIncident(formData: FormData) {
 }
 
 export async function updateIncidentStatus(id: string, status: string) {
+  await requireCapability("field");
   await db.incident.update({
     where: { id },
     data: { status, resolvedAt: status === "RESOLVED" ? new Date() : null },
@@ -44,6 +47,7 @@ export async function updateIncidentStatus(id: string, status: string) {
 }
 
 export async function deleteIncident(id: string) {
+  await requireCapability("operate");
   await db.incident.delete({ where: { id } });
   revalidatePath("/incidents");
   redirect("/incidents");

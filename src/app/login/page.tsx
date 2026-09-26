@@ -55,12 +55,6 @@ export default async function LoginPage() {
           <p className="mt-1 text-sm text-slate-500">Sign in to your operations dashboard.</p>
 
           <LoginForm />
-
-          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
-            <p className="font-medium text-slate-600">Demo credentials</p>
-            <p className="mt-1">faris.hnc5@gmail.com / password123 (Admin)</p>
-            <p>faris.hnc6@gmail.com / password123 (Dispatcher)</p>
-          </div>
         </div>
       </div>
     </div>

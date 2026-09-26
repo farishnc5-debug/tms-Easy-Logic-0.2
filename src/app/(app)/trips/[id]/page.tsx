@@ -9,6 +9,8 @@ import LiveMap from "@/components/map/live-map";
 import StatusControls from "@/components/trips/status-controls";
 import ReassignForm from "@/components/trips/reassign-form";
 import AllowanceCard from "@/components/trips/allowance-card";
+import WhatsAppCard from "@/components/trips/whatsapp-card";
+import { listTripMessages } from "@/lib/actions/messaging";
 import { fmtDateTime } from "@/lib/format";
 import { stageOfStatus } from "@/lib/constants";
 
@@ -39,6 +41,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
   ]);
 
   const currentStage = stageOfStatus(trip.status);
+  const messages = await listTripMessages(trip.shipmentId);
 
   return (
     <div className="space-y-6">
@@ -77,7 +80,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-semibold tracking-widest text-slate-400">LIVE MAP</p>
               <StatusControls
@@ -111,7 +114,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             />
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
               REASSIGN DRIVER / VEHICLE
             </p>
@@ -125,7 +128,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
           </div>
 
           {trip.incidents.length > 0 && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="card p-5">
               <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">INCIDENTS</p>
               <ul className="space-y-2">
                 {trip.incidents.map((inc) => (
@@ -142,7 +145,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             </div>
           )}
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs font-semibold tracking-widest text-slate-400">DOCUMENTS</p>
               <Link href={`/documents?tripId=${trip.id}`} className="text-xs font-medium text-brand-600 hover:underline">
@@ -164,7 +167,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">DRIVER</p>
             {trip.driver ? (
               <>
@@ -205,6 +208,21 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             )}
           </div>
 
+          <WhatsAppCard
+            tripId={trip.id}
+            hasDriverPhone={!!(trip.driver?.phone ?? trip.manualDriverPhone)}
+            hasCustomerPhone={!!trip.shipment.customer.phone}
+            messages={messages.map((m) => ({
+              id: m.id,
+              direction: m.direction,
+              toPhone: m.toPhone,
+              fromPhone: m.fromPhone,
+              body: m.body,
+              status: m.status,
+              createdAt: m.createdAt.toISOString(),
+            }))}
+          />
+
           <AllowanceCard
             tripId={trip.id}
             driverAllowance={trip.driverAllowance}
@@ -216,7 +234,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
             docsReceivedAt={trip.shipment.settlement?.docsReceivedAt?.toISOString() ?? null}
           />
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">TRIP INFO</p>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">

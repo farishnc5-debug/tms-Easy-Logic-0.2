@@ -25,7 +25,7 @@ export default async function NewQuotationPage() {
       <Link href="/quotations" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Quotations
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">New Quotation</h2>
         <p className="mb-5 text-sm text-slate-500">
           Prepare a transport price quotation. It can be printed with the full company letterhead.

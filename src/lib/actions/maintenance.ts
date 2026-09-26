@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import { logAudit } from "@/lib/audit";
 import { FAW_PLAN } from "@/lib/maintenance-plan";
@@ -8,6 +9,7 @@ import { FAW_PLAN } from "@/lib/maintenance-plan";
 // Update a truck's odometer reading (manual entry now; the GPS platform's
 // odometer will overwrite this automatically once the API key is connected).
 export async function updateOdometer(formData: FormData) {
+  await requireCapability("operate");
   const vehicleId = String(formData.get("vehicleId") ?? "");
   const km = Number(formData.get("odometerKm"));
   if (!vehicleId || Number.isNaN(km) || km < 0) {
@@ -29,6 +31,7 @@ export async function updateOdometer(formData: FormData) {
 // Record a completed service. This resets the interval counter for that PM
 // level — the next due km is computed from this record.
 export async function logService(formData: FormData) {
+  await requireCapability("operate");
   const vehicleId = String(formData.get("vehicleId") ?? "");
   const serviceCode = String(formData.get("serviceCode") ?? "");
   const odometerKm = Number(formData.get("odometerKm"));
@@ -69,6 +72,7 @@ export async function logService(formData: FormData) {
 }
 
 export async function deleteServiceRecord(recordId: string) {
+  await requireCapability("operate");
   const rec = await db.maintenanceRecord.delete({
     where: { id: recordId },
     include: { vehicle: { select: { plateNumber: true } } },

@@ -1,6 +1,8 @@
 "use server";
 
+import { parseVatPct } from "@/lib/money";
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { genCode } from "@/lib/constants";
@@ -16,6 +18,7 @@ async function nextQuotationCode() {
 }
 
 export async function createQuotation(formData: FormData) {
+  await requireCapability("operate");
   const manualMode = String(formData.get("manualMode") ?? "") === "1";
   const customerId = String(formData.get("customerId") ?? "").trim() || null;
   const manualCustomerName = String(formData.get("manualCustomerName") ?? "").trim() || null;
@@ -29,9 +32,7 @@ export async function createQuotation(formData: FormData) {
   const cargoDescription = String(formData.get("cargoDescription") ?? "").trim() || null;
   const weightKg = formData.get("weightKg") ? Number(formData.get("weightKg")) : null;
   const priceAmount = Number(formData.get("priceAmount") ?? 0);
-  const vatPct = formData.get("vatPct") !== null && formData.get("vatPct") !== ""
-    ? Number(formData.get("vatPct"))
-    : 15;
+  const vatPct = parseVatPct(formData.get("vatPct"));
   const validDays = Number(formData.get("validDays") ?? 15);
   const notes = String(formData.get("notes") ?? "").trim() || null;
 
@@ -72,12 +73,14 @@ export async function createQuotation(formData: FormData) {
 }
 
 export async function updateQuotationStatus(id: string, status: string) {
+  await requireCapability("operate");
   await db.quotation.update({ where: { id }, data: { status } });
   revalidatePath("/quotations");
   revalidatePath(`/quotations/${id}`);
 }
 
 export async function deleteQuotation(id: string) {
+  await requireCapability("operate");
   await db.quotation.delete({ where: { id } });
   revalidatePath("/quotations");
   redirect("/quotations");

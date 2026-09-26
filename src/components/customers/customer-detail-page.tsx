@@ -47,7 +47,7 @@ export default async function CustomerDetailPage({
         </form>
       </div>
 
-      <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex items-center gap-4 card p-6">
         <Avatar name={customer.name} size={56} />
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold text-slate-900">{customer.name}</h2>
@@ -82,7 +82,7 @@ export default async function CustomerDetailPage({
       )}
 
       {(customer.crDocDataUrl || customer.vatDocDataUrl) && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             LEGAL ATTACHMENTS
           </p>
@@ -114,7 +114,7 @@ export default async function CustomerDetailPage({
       )}
 
       {customer.documents.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             {isVendor ? "VENDOR DOCUMENTS — REGISTRATION & QUOTATIONS" : "DOCUMENTS"}
           </p>
@@ -136,7 +136,7 @@ export default async function CustomerDetailPage({
         </div>
       )}
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-4 text-xs font-semibold tracking-widest text-slate-400">
           EDIT {isVendor ? "VENDOR" : "CUSTOMER"}
         </p>
@@ -150,6 +150,11 @@ export default async function CustomerDetailPage({
               phone: customer.phone,
               email: customer.email,
               address: customer.address,
+              streetName: customer.streetName,
+              buildingNumber: customer.buildingNumber,
+              district: customer.district,
+              city: customer.city,
+              postalCode: customer.postalCode,
               crNumber: customer.crNumber,
               vatNumber: customer.vatNumber,
               crDocName: customer.crDocName,
@@ -174,7 +179,7 @@ export default async function CustomerDetailPage({
       </div>
 
       {!isVendor && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="card p-6">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             RECENT SHIPMENTS
           </p>

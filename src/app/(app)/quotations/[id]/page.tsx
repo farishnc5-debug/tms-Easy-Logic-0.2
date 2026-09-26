@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { totalsOf } from "@/lib/money";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Printer, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
@@ -23,8 +24,7 @@ export default async function QuotationDetailPage({
   const q = await db.quotation.findUnique({ where: { id }, include: { customer: true } });
   if (!q) notFound();
 
-  const vatAmount = (q.priceAmount * q.vatPct) / 100;
-  const total = q.priceAmount + vatAmount;
+  const { vat: vatAmount, total } = totalsOf(q.priceAmount, q.vatPct);
   const deleteAction = deleteQuotation.bind(null, id);
 
   return (
@@ -51,7 +51,7 @@ export default async function QuotationDetailPage({
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{q.code}</h2>

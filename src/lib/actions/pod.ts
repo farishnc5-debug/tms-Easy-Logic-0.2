@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { saveUpload } from "@/lib/storage";
 import { updateTripStatus } from "@/lib/actions/trips";
 
 export async function createPod(formData: FormData) {
+  await requireCapability("field");
   const shipmentId = String(formData.get("shipmentId") ?? "");
   const receivedBy = String(formData.get("receivedBy") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim() || null;

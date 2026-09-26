@@ -30,13 +30,13 @@ export default async function FleetPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard icon={TruckIcon} label={tr("Total Fleet")} value={vehicles.length} color="#2563eb" />
+        <StatCard icon={TruckIcon} label={tr("Total Fleet")} value={vehicles.length} color="#ea580c" />
         <StatCard icon={CheckCircle2} label={tr("Available")} value={countFor("AVAILABLE")} color="#16a34a" />
         <StatCard icon={Wrench} label={tr("Maintenance")} value={countFor("MAINTENANCE")} color="#f59e0b" />
         <StatCard icon={PowerOff} label={tr("Offline")} value={countFor("OFFLINE")} color="#94a3b8" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

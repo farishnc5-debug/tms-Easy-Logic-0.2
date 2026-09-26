@@ -101,6 +101,18 @@ export default async function WaybillPrintPage({ params }: { params: Promise<{ i
           </div>
         </div>
 
+        {shipment.wasiqaNumber && (
+          <div className="mt-1 border border-slate-300 bg-amber-50 px-3 py-2 text-xs">
+            <span className="text-slate-500">
+              Wasiqa (TGA) No / <span dir="rtl">رقم وثيقة النقل</span>:
+            </span>{" "}
+            <span className="font-bold text-slate-900">{shipment.wasiqaNumber}</span>
+            {shipment.wasiqaStatus && (
+              <span className="ml-2 font-medium text-slate-700">— {shipment.wasiqaStatus}</span>
+            )}
+          </div>
+        )}
+
         {/* Parties */}
         <div className="mt-4 grid grid-cols-2 gap-0">
           <div className="border border-slate-300 p-3">
@@ -305,7 +317,7 @@ export default async function WaybillPrintPage({ params }: { params: Promise<{ i
             loading to the place of delivery stated above. 3. The shipper certifies the accuracy of
             the cargo description and weight. 4. Any damage or shortage must be noted at the time of
             delivery and reported to the carrier within 24 hours. 5. Carriage is subject to the
-            carrier's standard terms and applicable transport regulations of the Kingdom of Saudi
+            carrier&apos;s standard terms and applicable transport regulations of the Kingdom of Saudi
             Arabia.
           </p>
         </div>

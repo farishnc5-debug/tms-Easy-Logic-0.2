@@ -23,7 +23,7 @@ export default async function NewPodPage({
       <Link href="/pod" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to POD & Proof
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">Upload Proof of Delivery</h2>
         <p className="mb-5 text-sm text-slate-500">
           Confirming delivery will mark the shipment and trip as Delivered.

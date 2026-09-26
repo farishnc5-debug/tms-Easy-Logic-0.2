@@ -30,7 +30,7 @@ export default function NewUserForm() {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">Temporary Password</label>
-        <input type="password" name="password" required minLength={6} className={inputCls} />
+        <input type="password" name="password" required minLength={8} className={inputCls} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

@@ -3,27 +3,16 @@ import { db } from "@/lib/db";
 import CycleStepper from "@/components/dashboard/cycle-stepper";
 import LiveMap from "@/components/map/live-map";
 import DonutChart from "@/components/charts/donut-chart";
-import TrendLine from "@/components/charts/trend-line";
 import { StatusBadge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { timeAgo, fmtTime } from "@/lib/format";
 import { stageOfStatus } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n.server";
-import { ClipboardEdit, Upload, AlertTriangle, Phone } from "lucide-react";
+import StatCard from "@/components/dashboard/stat-card";
+import { ClipboardEdit, Upload, AlertTriangle, Phone, Truck, Send, CheckCircle2, Clock, MapPinOff } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-function seededTrend(seed: number, base: number, points = 8) {
-  const arr: { label: string; value: number }[] = [];
-  let v = base;
-  for (let i = 0; i < points; i++) {
-    const wobble = Math.sin(seed + i * 1.3) * 6;
-    v = Math.max(0, base + wobble + i * 0.4);
-    arr.push({ label: `${i}`, value: Math.round(v) });
-  }
-  return arr;
-}
 
 export default async function DashboardPage() {
   const locale = await getLocale();
@@ -85,14 +74,30 @@ export default async function DashboardPage() {
   const maintenance = vCountFor("MAINTENANCE");
   const offline = vCountFor("OFFLINE");
 
+  // null when there is no delivery history yet — never show an invented figure
   const onTimePct =
-    delivered + delayed > 0 ? Math.round((delivered / (delivered + delayed)) * 100) : 92;
+    delivered + delayed > 0 ? Math.round((delivered / (delivered + delayed)) * 100) : null;
 
   const trip = currentTrip;
   const currentStage = trip ? stageOfStatus(trip.status) : 1;
 
+  const kpis = [
+    { label: "Active trips", value: allTrips.length, icon: Truck, color: "#2563eb", href: "/trips" },
+    { label: "Awaiting dispatch", value: countFor(shipmentCounts, "PENDING"), icon: Send, color: "#f59e0b", href: "/dispatching" },
+    { label: "Vehicles available", value: available, icon: CheckCircle2, color: "#16a34a", href: "/fleet" },
+    { label: "Delayed", value: delayed, icon: Clock, color: "#ef4444", href: "/shipments" },
+  ];
+
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpis.map((k) => (
+          <Link key={k.label} href={k.href} className="block">
+            <StatCard icon={k.icon} label={tr(k.label)} value={k.value} color={k.color} interactive />
+          </Link>
+        ))}
+      </div>
+
       <CycleStepper
         currentStage={trip ? currentStage : 1}
         tripType={trip?.shipment.tripType}
@@ -121,7 +126,7 @@ export default async function DashboardPage() {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="lg:col-span-2 card p-5">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold tracking-widest text-slate-400">
@@ -189,13 +194,22 @@ export default async function DashboardPage() {
               </div>
             </>
           ) : (
-            <div className="flex h-72 items-center justify-center text-sm text-slate-400">
-              No trips currently in transit
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <MapPinOff size={22} />
+              </div>
+              <p className="text-sm font-medium text-slate-600">{tr("No trips currently in transit")}</p>
+              <Link
+                href="/shipments/new"
+                className="rounded-lg bg-brand-600 px-3.5 py-2 text-xs font-medium text-white hover:bg-brand-700"
+              >
+                + {tr("New booking")}
+              </Link>
             </div>
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <p className="mb-4 text-xs font-semibold tracking-widest text-slate-400">
             {tr("TRIP PROGRESS")}
           </p>
@@ -267,7 +281,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">
               {tr("SHIPMENTS OVERVIEW")}
@@ -286,7 +300,7 @@ export default async function DashboardPage() {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">{tr("FLEET STATUS")}</p>
             <span className="text-xs text-slate-400">All Fleet</span>
@@ -303,21 +317,38 @@ export default async function DashboardPage() {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <div className="mb-1 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">
               {tr("ON TIME PERFORMANCE")}
             </p>
             <span className="text-xs text-slate-400">This Month</span>
           </div>
-          <p className="text-3xl font-bold text-emerald-600">{onTimePct}%</p>
-          <p className="text-xs text-slate-400">{tr("On Time Deliveries")}</p>
-          <div className="mt-2">
-            <TrendLine data={seededTrend(3, onTimePct)} color="#16a34a" height={90} />
-          </div>
+          {onTimePct === null ? (
+            <>
+              <p className="text-3xl font-bold text-slate-300">—</p>
+              <p className="text-xs text-slate-400">Not enough deliveries yet to calculate</p>
+            </>
+          ) : (
+            <>
+              <p className={`text-3xl font-bold ${onTimePct >= 90 ? "text-emerald-600" : onTimePct >= 75 ? "text-amber-600" : "text-red-600"}`}>
+                {onTimePct}%
+              </p>
+              <p className="text-xs text-slate-400">{tr("On Time Deliveries")}</p>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className={`h-full rounded-full ${onTimePct >= 90 ? "bg-emerald-500" : onTimePct >= 75 ? "bg-amber-500" : "bg-red-500"}`}
+                  style={{ width: `${onTimePct}%` }}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400">
+                {delivered} delivered · {delayed} delayed
+              </p>
+            </>
+          )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">{tr("RECENT ALERTS")}</p>
           </div>
@@ -351,7 +382,7 @@ export default async function DashboardPage() {
       </div>
 
       {allTrips.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-xs font-semibold tracking-widest text-slate-400">
               {tr("ALL ACTIVE TRIPS")} ({allTrips.length})

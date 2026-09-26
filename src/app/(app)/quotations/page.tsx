@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus, Eye, Printer, FileText } from "lucide-react";
 import { db } from "@/lib/db";
-import { StatusBadge, Pill } from "@/components/ui/badge";
+import { Pill } from "@/components/ui/badge";
 import { fmtDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export default async function QuotationsPage() {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

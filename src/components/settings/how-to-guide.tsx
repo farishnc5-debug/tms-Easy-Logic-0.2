@@ -19,7 +19,6 @@ import {
   Warehouse,
   Calculator,
   UserCog,
-  Building2,
   CheckCircle2,
   Star,
   Crown,
@@ -38,7 +37,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
+    <div className="card p-6">
       <div className="mb-3 flex items-center gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
           <Icon size={18} />
@@ -91,8 +90,7 @@ export function UsageGuide() {
       <Section icon={Rocket} step="STEP 1" title="First sign-in & your profile">
         <Ol>
           <li>
-            Sign in with your email and password. Demo accounts:{" "}
-            <Code>faris.hnc5@gmail.com / password123</Code> (Admin).
+            Sign in with the email and password your administrator gave you.
           </li>
           <li>
             Go to <strong>Settings → My Profile</strong> and change your password immediately.
@@ -510,7 +508,7 @@ function RoleCard({
   tools: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="card p-5">
       <div className="flex items-center gap-3">
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -701,7 +699,7 @@ export function TeamGuide() {
       </Section>
 
       {/* Role cards */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-1 text-xs font-semibold tracking-widest text-slate-400">
           THE FOUR ROLES — WHO DOES WHAT
         </p>
@@ -713,7 +711,7 @@ export function TeamGuide() {
           <RoleCard
             icon={Headset}
             code="CS"
-            color="#2563eb"
+            color="#ea580c"
             title="Customer Service Representative"
             reports="Front office — talks to customers"
             duties={[
@@ -741,7 +739,7 @@ export function TeamGuide() {
           <RoleCard
             icon={Calculator}
             code="ACC"
-            color="#7c3aed"
+            color="#0d9488"
             title="Accountant"
             reports="Finance — controls the money"
             duties={[
@@ -820,7 +818,7 @@ export function TeamGuide() {
       </Section>
 
       {/* Subscription plans */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="card p-5">
         <p className="mb-1 text-xs font-semibold tracking-widest text-slate-400">
           SUBSCRIPTION PLANS
         </p>

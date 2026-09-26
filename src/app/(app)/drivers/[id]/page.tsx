@@ -37,7 +37,7 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
         </form>
       </div>
 
-      <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex items-center gap-4 card p-6">
         <Avatar name={driver.name} size={56} />
         <div>
           <h2 className="text-lg font-semibold text-slate-900">{driver.name}</h2>
@@ -50,7 +50,7 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-4 text-xs font-semibold tracking-widest text-slate-400">EDIT DRIVER</p>
         <form action={action} className="space-y-5">
           <DriverFormFields
@@ -72,7 +72,7 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ i
         </form>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">RECENT TRIPS</p>
         {driver.trips.length === 0 ? (
           <p className="text-sm text-slate-400">No trips recorded yet.</p>

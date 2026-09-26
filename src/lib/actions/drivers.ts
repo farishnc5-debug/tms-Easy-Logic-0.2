@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireCapability } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 
 export async function createDriver(formData: FormData) {
+  await requireCapability("operate");
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim() || null;
@@ -23,6 +25,7 @@ export async function createDriver(formData: FormData) {
 }
 
 export async function updateDriver(id: string, formData: FormData) {
+  await requireCapability("operate");
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim() || null;
@@ -41,6 +44,7 @@ export async function updateDriver(id: string, formData: FormData) {
 }
 
 export async function deleteDriver(id: string) {
+  await requireCapability("operate");
   await db.trip.updateMany({ where: { driverId: id }, data: { driverId: null } });
   await db.driver.delete({ where: { id } });
   revalidatePath("/drivers");

@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Banknote, Inbox, Landmark, FileText, BadgeDollarSign, Eye } from "lucide-react";
 import { db } from "@/lib/db";
 import StatCard from "@/components/dashboard/stat-card";
-import { StatusBadge, Pill } from "@/components/ui/badge";
+import { Pill } from "@/components/ui/badge";
 import Pagination from "@/components/ui/pagination";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, nowMs } from "@/lib/format";
 import { settlementStageOf, SETTLEMENT_STATUS_LABELS } from "@/lib/constants";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n.server";
@@ -91,7 +91,7 @@ export default async function SettlementsPage({
   const awaitingDocs = deliveredTotal - counts.reduce((sum, c) => sum + c._count.status, 0) + countFor("DOCS_WITH_DRIVER");
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const now = Date.now();
+  const now = nowMs();
 
   const buildTabHref = (key: string) =>
     key === "all" ? "/settlements" : `/settlements?tab=${key}`;
@@ -107,12 +107,12 @@ export default async function SettlementsPage({
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <StatCard icon={Banknote} label={tr("Awaiting Originals")} value={awaitingDocs} color="#16a34a" />
         <StatCard icon={Inbox} label={tr("Originals in Yard")} value={countFor("DOCS_IN_YARD")} color="#0284c7" />
-        <StatCard icon={Landmark} label={tr("With Accounts")} value={countFor("WITH_ACCOUNTS")} color="#7c3aed" />
+        <StatCard icon={Landmark} label={tr("With Accounts")} value={countFor("WITH_ACCOUNTS")} color="#0d9488" />
         <StatCard icon={FileText} label={tr("Invoiced")} value={countFor("INVOICED")} color="#f97316" />
         <StatCard icon={BadgeDollarSign} label={tr("Paid & Closed")} value={countFor("PAID")} color="#16a34a" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="flex gap-1 overflow-x-auto border-b border-slate-100 px-4 pt-3">
           {TABS.map((tabItem) => (
             <Link

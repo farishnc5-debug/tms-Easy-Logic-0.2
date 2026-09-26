@@ -82,9 +82,11 @@ export default function LocationPicker({
 
   // Refs so the Leaflet click handler always sees the latest mode/setters
   const modeRef = useRef(mode);
-  modeRef.current = mode;
   const showReturnRef = useRef(showReturn);
-  showReturnRef.current = showReturn;
+  useEffect(() => {
+    modeRef.current = mode;
+    showReturnRef.current = showReturn;
+  });
 
   function placeFromLatLng(lat: number, lng: number) {
     const pin = latLngToMap(lat, lng);
@@ -99,7 +101,9 @@ export default function LocationPicker({
     }
   }
   const placeRef = useRef(placeFromLatLng);
-  placeRef.current = placeFromLatLng;
+  useEffect(() => {
+    placeRef.current = placeFromLatLng;
+  });
 
   // Initialize the real map once
   useEffect(() => {

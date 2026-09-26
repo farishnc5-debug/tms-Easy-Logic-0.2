@@ -45,7 +45,139 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Geist for Latin, system Arabic-capable fonts as fallback (Tahoma/Segoe UI render Arabic well on Windows) */
+  font-family: var(--font-geist-sans), "Segoe UI", Tahoma, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Visible keyboard focus everywhere (accessibility) without affecting mouse clicks */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Smooth, subtle interactions */
+a,
+button {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease;
+}
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Page content fades in gently after navigation */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-in {
+  animation: page-in 0.25s ease-out;
+}
+
+/* ------------------------------------------------------------------
+   Design system: surfaces, elevation & typography
+   Centralised so every screen shares one professional visual language.
+   `.card` replaces the old inline `rounded-xl border border-slate-200
+   bg-white` pattern app-wide — restyle here and all surfaces follow.
+   ------------------------------------------------------------------ */
+:root {
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --hairline: #e8edf3;
+  --radius-card: 14px;
+  /* Layered, low-contrast shadows read as depth without looking heavy */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 6px 16px -4px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-pop: 0 12px 32px -8px rgba(15, 23, 42, 0.18);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* Interactive cards (clickable KPIs, list rows) lift on hover */
+.card-interactive {
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.card-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: #dbe3ec;
+  transform: translateY(-2px);
+}
+
+/* Floating surfaces: dropdowns, popovers, menus */
+.pop {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+}
+
+/* Standard eyebrow label above a card/section's content */
+.section-label {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* Tabular figures keep KPI numbers aligned as values change */
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Skeleton shimmer for loading states */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e2e8f0;
+  border-radius: 8px;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Form controls must stay readable regardless of OS dark-mode preference */

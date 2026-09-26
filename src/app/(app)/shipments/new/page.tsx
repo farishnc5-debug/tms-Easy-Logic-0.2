@@ -16,7 +16,7 @@ export default async function NewShipmentPage() {
       <Link href="/shipments" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
         <ArrowLeft size={15} /> Back to Shipments
       </Link>
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="card p-6">
         <h2 className="mb-1 text-lg font-semibold text-slate-900">New Shipment</h2>
         <p className="mb-5 text-sm text-slate-500">
           Create a shipment order. Assign a driver and vehicle afterwards from Dispatching.

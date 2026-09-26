@@ -18,9 +18,14 @@ export default function ShipmentFilters({
   const [, startTransition] = useTransition();
   const [q, setQ] = useState(searchParams.get("q") ?? "");
 
-  useEffect(() => {
-    setQ(searchParams.get("q") ?? "");
-  }, [searchParams]);
+  // Keep the box in sync when the URL changes (back/forward, "clear filters")
+  // by adjusting state during render rather than in an effect.
+  const urlQ = searchParams.get("q") ?? "";
+  const [prevUrlQ, setPrevUrlQ] = useState(urlQ);
+  if (urlQ !== prevUrlQ) {
+    setPrevUrlQ(urlQ);
+    setQ(urlQ);
+  }
 
   function setParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());

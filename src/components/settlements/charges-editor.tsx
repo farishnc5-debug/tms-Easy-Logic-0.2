@@ -8,7 +8,7 @@ type ChargeRow = { description: string; amount: string };
 
 // Additional invoice charges (waiting time, detention, handling...). Rows are
 // serialized to a hidden JSON input carried by the invoice form post.
-export default function ChargesEditor({ baseAmountInputName = "amount" }: { baseAmountInputName?: string }) {
+export default function ChargesEditor() {
   const [rows, setRows] = useState<ChargeRow[]>([]);
   const t = useT();
 

@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      // Vercel rejects request bodies over ~4.5 MB, so keep uploads under that
+      bodySizeLimit: "4mb",
     },
   },
 };

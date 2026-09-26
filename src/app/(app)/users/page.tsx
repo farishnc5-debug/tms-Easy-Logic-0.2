@@ -1,3 +1,4 @@
+import { requirePageCapability } from "@/lib/page-guards";
 import Link from "next/link";
 import { UserCog, Plus } from "lucide-react";
 import { db } from "@/lib/db";
@@ -8,6 +9,7 @@ import { ROLE_LABELS } from "@/lib/constants";
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
+  await requirePageCapability("admin");
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" } });
 
   return (
@@ -24,7 +26,7 @@ export default async function UsersPage() {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

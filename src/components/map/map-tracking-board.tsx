@@ -47,7 +47,7 @@ export default function MapTrackingBoard({
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
-      <div className="rounded-xl border border-slate-200 bg-white p-3 xl:col-span-1">
+      <div className="card p-3 xl:col-span-1">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -88,7 +88,7 @@ export default function MapTrackingBoard({
       </div>
 
       <div className="space-y-4 xl:col-span-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="card p-4">
           <LiveMap
             trips={trips.map((t) => ({
               id: t.id,
@@ -118,7 +118,7 @@ export default function MapTrackingBoard({
         </div>
 
         {selected && (
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-lg font-bold text-slate-900">{selected.code}</p>
               <StatusBadge status={selected.status} />

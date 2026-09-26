@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { totalsOf } from "@/lib/money";
 import { db } from "@/lib/db";
 import { getCompanyProfile } from "@/lib/company";
 import CompanyHeader from "@/components/print/company-header";
@@ -23,8 +24,7 @@ export default async function QuotationPrintPage({
   ]);
   if (!q) notFound();
 
-  const vatAmount = (q.priceAmount * q.vatPct) / 100;
-  const total = q.priceAmount + vatAmount;
+  const { vat: vatAmount, total } = totalsOf(q.priceAmount, q.vatPct);
   const isRound = q.tripType === "ROUND_TRIP";
   const custName = q.customer?.name ?? q.manualCustomerName;
   const custCompany = q.customer?.company ?? q.manualCustomerCompany;

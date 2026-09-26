@@ -46,14 +46,14 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             SHIPMENT VOLUME (BY WEEKDAY)
           </p>
           <SimpleBarChart data={volumeByDay} />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <p className="mb-1 text-xs font-semibold tracking-widest text-slate-400">
             ON-TIME DELIVERY PERFORMANCE
           </p>
@@ -63,7 +63,7 @@ export default async function ReportsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             FLEET UTILIZATION
           </p>
@@ -79,16 +79,16 @@ export default async function ReportsPage() {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+        <div className="card p-5 lg:col-span-2">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             TOP CUSTOMERS BY SHIPMENT VOLUME
           </p>
-          <SimpleBarChart data={topCustomers} color="#7c3aed" />
+          <SimpleBarChart data={topCustomers} color="#0d9488" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="card p-5">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">TRIP OUTCOMES</p>
           <DonutChart
             centerValue={trips.length}
@@ -101,7 +101,7 @@ export default async function ReportsPage() {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+        <div className="card p-5 lg:col-span-2">
           <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
             DRIVER PERFORMANCE
           </p>

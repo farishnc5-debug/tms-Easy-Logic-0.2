@@ -1,3 +1,4 @@
+import { like } from "@/lib/search";
 import Link from "next/link";
 import { Package, Truck, PackageCheck, XCircle, Clock, Plus, Download, Eye, Pencil } from "lucide-react";
 import { db } from "@/lib/db";
@@ -59,10 +60,10 @@ export default async function ShipmentsPage({
   }
   if (q) {
     where.OR = [
-      { code: { contains: q } },
-      { customer: { name: { contains: q } } },
-      { originName: { contains: q } },
-      { destinationName: { contains: q } },
+      { code: like(q) },
+      { customer: { name: like(q) } },
+      { originName: like(q) },
+      { destinationName: like(q) },
     ];
   }
 
@@ -123,15 +124,15 @@ export default async function ShipmentsPage({
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatCard icon={Package} label={tr("Total Shipments")} value={totalAll} color="#2563eb" />
+        <StatCard icon={Package} label={tr("Total Shipments")} value={totalAll} color="#ea580c" />
         <StatCard icon={Clock} label={tr("PENDING")} value={countFor("PENDING")} color="#f59e0b" />
         <StatCard icon={Truck} label={tr("IN TRANSIT")} value={countFor("IN_TRANSIT")} color="#0284c7" />
         <StatCard icon={PackageCheck} label={tr("DELIVERED")} value={countFor("DELIVERED")} color="#16a34a" />
         <StatCard icon={Clock} label={tr("DELAYED")} value={countFor("DELAYED")} color="#ef4444" />
-        <StatCard icon={XCircle} label={tr("CANCELLED")} value={countFor("CANCELLED")} color="#8b5cf6" />
+        <StatCard icon={XCircle} label={tr("CANCELLED")} value={countFor("CANCELLED")} color="#64748b" />
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="card">
         <div className="flex gap-1 overflow-x-auto border-b border-slate-100 px-4 pt-3">
           {TABS.map((t) => (
             <Link

@@ -15,6 +15,11 @@ export default function CustomerFormFields({
     phone?: string;
     email?: string | null;
     address?: string | null;
+    streetName?: string | null;
+    buildingNumber?: string | null;
+    district?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
     crNumber?: string | null;
     vatNumber?: string | null;
     crDocName?: string | null;
@@ -79,6 +84,34 @@ export default function CustomerFormFields({
       <div className="sm:col-span-2">
         <label className="mb-1 block text-sm font-medium text-slate-700">Address</label>
         <input name="address" defaultValue={defaults?.address ?? ""} className={inputCls} />
+      </div>
+
+      <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+        <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
+          NATIONAL ADDRESS (needed for ZATCA tax invoices to VAT-registered customers)
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Street name</label>
+            <input name="streetName" defaultValue={defaults?.streetName ?? ""} className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Building number (4 digits)</label>
+            <input name="buildingNumber" defaultValue={defaults?.buildingNumber ?? ""} inputMode="numeric" pattern="\d{4}" placeholder="1234" className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">District</label>
+            <input name="district" defaultValue={defaults?.district ?? ""} className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">City</label>
+            <input name="city" defaultValue={defaults?.city ?? ""} className={inputCls} />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Postal code (5 digits)</label>
+            <input name="postalCode" defaultValue={defaults?.postalCode ?? ""} inputMode="numeric" pattern="\d{5}" placeholder="12211" className={inputCls} />
+          </div>
+        </div>
       </div>
 
       <div className="sm:col-span-2 mt-2 rounded-lg border border-slate-200 bg-slate-50/60 p-4">

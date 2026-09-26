@@ -24,7 +24,7 @@ export default async function DispatchingPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard icon={Package} label="Awaiting Dispatch" value={pendingShipments.length} color="#f59e0b" />
         <StatCard icon={Users} label="Available Drivers" value={availableDrivers.length} color="#16a34a" />
-        <StatCard icon={TruckIcon} label="Available Vehicles" value={availableVehicles.length} color="#2563eb" />
+        <StatCard icon={TruckIcon} label="Available Vehicles" value={availableVehicles.length} color="#ea580c" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -36,12 +36,12 @@ export default async function DispatchingPage() {
             </p>
           </div>
           {pendingShipments.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-400">
+            <div className="card p-12 text-center text-sm text-slate-400">
               All shipments are dispatched. Nothing waiting.
             </div>
           ) : (
             pendingShipments.map((s) => (
-              <div key={s.id} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div key={s.id} className="card p-4">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <Link href={`/shipments/${s.id}`} className="font-medium text-brand-600 hover:underline">
@@ -65,7 +65,7 @@ export default async function DispatchingPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="card p-4">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
               AVAILABLE DRIVERS
             </p>
@@ -88,7 +88,7 @@ export default async function DispatchingPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <div className="card p-4">
             <p className="mb-3 text-xs font-semibold tracking-widest text-slate-400">
               AVAILABLE VEHICLES
             </p>

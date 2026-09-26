@@ -94,7 +94,7 @@ export default function CycleStepper({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="card p-5">
       <div className="mb-5 flex items-center gap-2">
         <p className="text-xs font-semibold tracking-widest text-slate-400">
           {t("LOGISTICS CYCLE — END TO END VISIBILITY")}
